@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
-public class TaskScheduler {
+public class OverdueTaskScheduler {
 
     @Autowired
     private TaskRepository taskRepository;
