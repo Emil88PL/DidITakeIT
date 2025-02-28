@@ -37,11 +37,6 @@ function renderTasks() {
       ${task.alarmTriggered ? '<strong style="color:red;"> Unfinished Task!</strong>' : ''}
     `;
     list.appendChild(li);
-
-    // Play alarm sound if needed (this simple example may play repeatedly until reset)
-    if (task.alarmTriggered) {
-      document.getElementById('alarm-sound').play();
-    }
   });
 }
 
@@ -72,18 +67,29 @@ function deleteTask(id) {
 function checkOverdueTasks() {
   const tasks = getTasks();
   const now = new Date();
-  let changed = false;
+  let shouldPlayAlarm = false;
 
+  // Mark tasks as overdue (set alarmTriggered to true)
   tasks.forEach(task => {
-    // Only check tasks that are unchecked and whose due time has passed
-    if (!task.checked && new Date(task.dueTime) <= now && !task.alarmTriggered) {
+    if (!task.checked && new Date(task.dueTime) <= now) {
+      // Always set alarmTriggered so UI reflects the overdue status
       task.alarmTriggered = true;
-      changed = true;
+      shouldPlayAlarm = true;
     }
   });
-  if (changed) {
-    saveTasks(tasks);
-    renderTasks();
+
+  saveTasks(tasks);
+  renderTasks(); // Update UI without playing the alarm
+
+  // If at least one task is overdue, play the alarm sound once
+  if (shouldPlayAlarm) {
+    const alarmSound = document.getElementById('alarm-sound');
+    // Stop the sound if it's playing, reset, and then play it once.
+    alarmSound.pause();
+    alarmSound.currentTime = 0;
+    alarmSound.play().catch(err => {
+      console.warn("Alarm playback prevented until user interaction", err);
+    });
   }
 }
 
