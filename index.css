@@ -2,33 +2,32 @@ body {
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #1e3c72, #373636);
     color: #fff;
-    padding: 0 20px 0 20px;
+    padding-top: 100px;
+
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start; /* Pushes content higher */
     align-items: center;
-    height: 100vh;
-    margin: 0 auto;
+    height: 100vh; /* Keeps full background */
+    margin: 0;
+}
+
+.addButton, .deleteButton {
+    margin-top: 7px;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
 }
 
 .addButton {
-    margin-top: 7px;
     background: #4CAF50;
     color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 10px;
-    cursor: pointer;
 }
 
 .deleteButton {
-    margin-top: 7px;
     background: #ed0303;
     color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 10px;
-    cursor: pointer;
 }
 
 .addButton:hover {
@@ -38,7 +37,6 @@ body {
 .deleteButton:hover {
     background: rgba(237, 3, 3, 0.7);
 }
-
 
 ul, ol {
     list-style-type: none;
@@ -52,5 +50,21 @@ ul, ol {
     justify-content: space-between;
     align-items: center;
     gap: 10px;
+}
+
+@media screen and (max-width: 400px) {
+    #task-form {
+        display: flex;
+        flex-direction: column;
+        width: 100%; /* Ensure it doesn't shrink too much */
+    }
+    #task-form input,
+    #task-form button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    body {
+        padding: 20px;
+    }
 }
 
