@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+    <title>Did I take it?</title>
+    <style>
+        body {
+          font-family: sans-serif;
+        }
+        li {
+          margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<h1>Task Alarm App</h1>
+<form id="task-form">
+    <input type="text" id="task-name" placeholder="Task name" required />
+    <!-- Input for time (tasks are always for today) -->
+    <input type="time" id="due-time" required />
+    <button type="submit">Add Task</button>
+</form>
+
+<ul id="task-list"></ul>
+
+<!-- Alarm sound element -->
+<audio id="alarm-sound" src="alarm.mp3" preload="auto"></audio>
+
+<script src="app.js"></script>
+</body>
+</html>
