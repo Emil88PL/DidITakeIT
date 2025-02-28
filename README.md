@@ -18,7 +18,7 @@ DidITakeIT is a simple daily task reminder application designed to help you reme
 
 ## Screenshots
 
-![DidITakeIT Screenshot](img.png)
+![img_1.png](img_1.png)
 
 ## How It Works
 
