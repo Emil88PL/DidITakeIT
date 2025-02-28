@@ -40,7 +40,7 @@ async function loadTasks() {
           <button onclick="deleteTask(${task.id})" class="deleteButton">Delete</button>
         </div>
       </div>
-      ${task.alarmTriggered ? '<strong style="color:red;"> Alarm!</strong>' : ''}
+      ${task.alarmTriggered ? '<strong style="color:red;"> Unfinished Task!</strong>' : ''}
     `;
     list.appendChild(li);
 
