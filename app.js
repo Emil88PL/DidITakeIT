@@ -107,9 +107,43 @@ function resetTasksAtFourAM() {
   }
 }
 
+function checkDueTime() {
+  const tasks = getTasks();
+  let changed = false;
+  const now = new Date();
+  // Today's date at midnight
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  tasks.forEach(task => {
+    // Convert dueTime string to a Date object
+    const taskDue = new Date(task.dueTime);
+    // Create a date object for the task's date (without time)
+    const taskDueDate = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate());
+
+    // If the task's due date is before today, update it to today (preserving the time)
+    if (taskDueDate < today) {
+      // Create a new due time for today with the same hour, minute, second, and millisecond
+      let newDueTime = new Date(today);
+      newDueTime.setHours(taskDue.getHours(), taskDue.getMinutes(), taskDue.getSeconds(), taskDue.getMilliseconds());
+
+      task.dueTime = newDueTime.toISOString();
+      // Optionally, reset the alarm flag so the alarm check starts fresh for the new day:
+      task.alarmTriggered = false;
+      changed = true;
+    }
+  });
+
+  if (changed) {
+    saveTasks(tasks);
+    renderTasks();
+  }
+}
+
+
 // Set intervals to check for overdue tasks and reset tasks at 4 AM every minute
 setInterval(checkOverdueTasks, 60000);
 setInterval(resetTasksAtFourAM, 60000);
+setInterval(checkDueTime, 60000);
 
 // Handle task form submission
 document.getElementById('task-form').addEventListener('submit', function(e) {
