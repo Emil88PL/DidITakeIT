@@ -130,6 +130,7 @@ function checkDueTime() {
       // Optionally, reset the alarm flag so the alarm check starts fresh for the new day:
       task.alarmTriggered = false;
       changed = true;
+      task.checked = false;
     }
   });
 
