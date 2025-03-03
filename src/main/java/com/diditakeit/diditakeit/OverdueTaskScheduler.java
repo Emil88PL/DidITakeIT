@@ -4,7 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Component
@@ -25,5 +27,25 @@ public class OverdueTaskScheduler {
             // Optionally, you might want to send a push notification or update a message queue for real-time updates.
         }
     }
+
+    @Scheduled(cron = "0 0 0 * * ?") // Runs at midnight every day
+    public void updateTaskDueTimes() {
+        List<Task> tasks = taskRepository.findAll();
+        LocalDate today = LocalDate.now();
+
+        for (Task task : tasks) {
+            LocalDate taskDueDate = task.getDueTime().toLocalDate();
+            if (taskDueDate.isBefore(today)) {
+                // Preserve the time part and update the date to today
+                LocalTime taskTime = task.getDueTime().toLocalTime();
+                task.setDueTime(LocalDateTime.of(today, taskTime));
+                // Optionally reset alarm triggered flag
+                task.setAlarmTriggered(false);
+                task.setChecked(false);
+                taskRepository.save(task);
+            }
+        }
+    }
+
 }
 
