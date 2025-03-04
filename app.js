@@ -144,7 +144,7 @@ function checkDueTime() {
 // Set intervals to check for overdue tasks and reset tasks at 4 AM every minute
 setInterval(checkOverdueTasks, 60000);
 setInterval(resetTasksAtFourAM, 60000);
-setInterval(checkDueTime, 60000);
+setInterval(checkDueTime, 30000);
 
 // Handle task form submission
 document.getElementById('task-form').addEventListener('submit', function(e) {
