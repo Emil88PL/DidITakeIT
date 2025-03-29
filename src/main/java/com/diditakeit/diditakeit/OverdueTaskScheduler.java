@@ -34,7 +34,7 @@ public class OverdueTaskScheduler {
 
     @Scheduled(cron = "0 0 0 * * ?") // Runs at midnight every day
     public void updateTaskDueTimes() {
-        List<Task> tasks = taskRepository.findAll();
+        List<Task> tasks = taskRepository.findAllByOrderByDueTimeAsc();
         LocalDate today = LocalDate.now();
 
         for (Task task : tasks) {
