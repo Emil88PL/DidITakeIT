@@ -9,8 +9,11 @@ import java.util.List;
 @Component
 public class DailyResetScheduler {
 
-    @Autowired
-    private TaskRepository taskRepository;
+    private final TaskRepository taskRepository;
+
+    public DailyResetScheduler(TaskRepository taskRepository) {
+        this.taskRepository = taskRepository;
+    }
 
     @Scheduled(cron = "0 0 4 * * ?") // At 4:00 AM every day
     public void resetTasks() {

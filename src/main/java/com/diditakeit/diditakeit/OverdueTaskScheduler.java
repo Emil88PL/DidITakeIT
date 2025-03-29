@@ -12,8 +12,12 @@ import java.util.List;
 @Component
 public class OverdueTaskScheduler {
 
-    @Autowired
-    private TaskRepository taskRepository;
+
+    private final TaskRepository taskRepository;
+
+    public OverdueTaskScheduler(TaskRepository taskRepository) {
+        this.taskRepository = taskRepository;
+    }
 
     @Scheduled(fixedRate = 60000) // runs every minute
     public void checkOverdueTasks() {

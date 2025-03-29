@@ -20,8 +20,11 @@ import java.util.List;
 @RequestMapping("/tasks")
 public class TaskController {
 
-    @Autowired
-    private TaskRepository taskRepository;
+    private final TaskRepository taskRepository;
+
+    public TaskController(TaskRepository taskRepository) {
+        this.taskRepository = taskRepository;
+    }
 
     @PostMapping
     public Task createTask(@RequestBody TaskDTO taskDTO) {
