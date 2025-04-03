@@ -14,11 +14,6 @@ function generateId() {
   return Date.now();
 }
 
-// Helper: convert "HH:MM" to minutes since midnight
-function timeToMinutes(time) {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
-}
 
 // Render the task list on the page
 function renderTasks() {
@@ -77,29 +72,24 @@ function deleteTask(id) {
   renderTasks();
 }
 
-// Unified function to update task states
+// Helper: convert "HH:MM" to minutes since midnight
+function timeToMinutes(time) {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
 function updateTasks() {
-  const tasks = getTasks();
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const tasks = getTasks();
   let shouldPlayAlarm = false;
 
-  if (now.getHours() === 4 && now.getMinutes() === 0) {
-    tasks.forEach(task => {
-      task.checked = false;
-      task.alarmTriggered = false;
-    });
-  }
 
   tasks.forEach(task => {
-    const [hours, minutes] = task.dueTime.split(':');
-    const dueDateTime = new Date(today);
-    dueDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    const taskDueMinutes = timeToMinutes(task.dueTime);
 
-    console.log("Current time:", now.toString());
-    console.log("Task due time:", dueDateTime.toString());
-
-    if (dueDateTime < now && !task.checked) {
+    // If current time is past the due time and task is not checked, mark alarm as triggered
+    if (currentMinutes > taskDueMinutes && !task.checked) {
       task.alarmTriggered = true;
       shouldPlayAlarm = true;
     } else {
@@ -120,7 +110,7 @@ function updateTasks() {
   }
 }
 
-// Set a single interval to update tasks every 30 seconds
+// Example: update tasks every 30 seconds
 setInterval(updateTasks, 30000);
 
 // Handle task form submission
