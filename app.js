@@ -19,8 +19,7 @@ function renderTasks() {
   const tasks = getTasks();
 
   // Sort tasks by dueTime (earlier due times first)
-  tasks.sort((a, b) => new Date(a.dueTime) - new Date(b.dueTime));
-  // making commit only for vercel
+  // tasks.sort((a, b) => new Date(a.dueTime) - new Date(b.dueTime));
 
   const list = document.getElementById('task-list');
   list.innerHTML = '';
