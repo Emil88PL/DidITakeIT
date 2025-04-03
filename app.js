@@ -14,13 +14,28 @@ function generateId() {
   return Date.now();
 }
 
+// Helper: convert "HH:MM" to minutes since midnight
+function timeToMinutes(time) {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
 // Render the task list on the page
 function renderTasks() {
   const tasks = getTasks();
-  tasks.sort((a, b) => new Date(a.dueTime) - new Date(b.dueTime));
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const list = document.getElementById('task-list');
   list.innerHTML = '';
+
+  // Sort tasks by due time (earlier times first)
+  tasks.sort((a, b) => timeToMinutes(a.dueTime) - timeToMinutes(b.dueTime));
+
   tasks.forEach(task => {
+    const [hours, minutes] = task.dueTime.split(':');
+    const dueDateTime = new Date(today);
+    dueDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
     const li = document.createElement('li');
     li.innerHTML = `
       <div class="container">
@@ -28,7 +43,7 @@ function renderTasks() {
           <input type="checkbox" ${task.checked ? 'checked' : ''} onchange="toggleTask(${task.id}, this.checked)">
         </div>
         <div>
-          <span>${task.name} (Due: ${new Date(task.dueTime).toLocaleTimeString()})</span>
+          <span>${task.name} (Due: ${dueDateTime.toLocaleTimeString()})</span>
         </div>
         <div>
           <button onclick="deleteTask(${task.id})" class="deleteButton">Delete</button>
@@ -77,15 +92,11 @@ function updateTasks() {
   }
 
   tasks.forEach(task => {
-    const taskDue = new Date(task.dueTime);
-    const taskDueDate = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate());
-    if (taskDueDate < today) {
-      let newDueTime = new Date(today);
-      newDueTime.setHours(taskDue.getHours(), taskDue.getMinutes(), taskDue.getSeconds(), taskDue.getMilliseconds());
-      task.dueTime = newDueTime.toISOString();
-      task.checked = false;
-    }
-    if (!task.checked && new Date(task.dueTime) <= now) {
+    const [hours, minutes] = task.dueTime.split(':');
+    const dueDateTime = new Date(today);
+    dueDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+    if (dueDateTime < now && !task.checked) {
       task.alarmTriggered = true;
       shouldPlayAlarm = true;
     } else {
@@ -114,13 +125,10 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
   e.preventDefault();
   const name = document.getElementById('task-name').value;
   const timeInput = document.getElementById('due-time').value; // e.g., "14:30"
-  const today = new Date();
-  const [hours, minutes] = timeInput.split(':');
-  today.setHours(hours, minutes, 0, 0);
   const newTask = {
     id: generateId(),
     name: name,
-    dueTime: today.toISOString(),
+    dueTime: timeInput, // Store as "HH:MM"
     checked: false,
     alarmTriggered: false
   };
