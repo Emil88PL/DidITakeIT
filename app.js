@@ -87,7 +87,8 @@ function updateTasks() {
 
   tasks.forEach(task => {
     const taskDueMinutes = timeToMinutes(task.dueTime);
-
+    console.log(task.dueTime);
+    console.log("time now", now.getHours(), now.getMinutes());
     // If current time is past the due time and task is not checked, mark alarm as triggered
     if (currentMinutes > taskDueMinutes && !task.checked) {
       task.alarmTriggered = true;
@@ -111,7 +112,7 @@ function updateTasks() {
 }
 
 // Example: update tasks every 30 seconds
-setInterval(updateTasks, 30000);
+setInterval(updateTasks, 10000);
 
 // Handle task form submission
 document.getElementById('task-form').addEventListener('submit', function(e) {
