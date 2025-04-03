@@ -80,7 +80,7 @@ function timeToMinutes(time) {
 
 function updateTasks() {
   const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentMinutes = (now.getHours() + 1) * 60 + now.getMinutes();
   const tasks = getTasks();
   let shouldPlayAlarm = false;
 
@@ -88,7 +88,7 @@ function updateTasks() {
   tasks.forEach(task => {
     const taskDueMinutes = timeToMinutes(task.dueTime);
     console.log(task.dueTime);
-    console.log("time now", now.getHours(), now.getMinutes());
+    console.log("time now", currentMinutes);
     // If current time is past the due time and task is not checked, mark alarm as triggered
     if (currentMinutes > taskDueMinutes && !task.checked) {
       task.alarmTriggered = true;
