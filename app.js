@@ -96,6 +96,9 @@ function updateTasks() {
     const dueDateTime = new Date(today);
     dueDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
+    console.log("Current time:", now.toString());
+    console.log("Task due time:", dueDateTime.toString());
+
     if (dueDateTime < now && !task.checked) {
       task.alarmTriggered = true;
       shouldPlayAlarm = true;
