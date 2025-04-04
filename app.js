@@ -164,7 +164,7 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
   today.setHours(hours, minutes, 0, 0);
 
   // Add one hour to the due time
-  today.setHours(today.getHours() + 1);
+  // today.setHours(today.getHours() + 1);
 
   const newTask = {
     id: generateId(),
