@@ -72,22 +72,22 @@ function checkOverdueTasks() {
   const now = new Date();
   let shouldPlayAlarm = false;
 
-  // Mark tasks as overdue (set alarmTriggered to true)
   tasks.forEach(task => {
-    if (!task.checked && new Date(task.dueTime) <= now) {
-      // Always set alarmTriggered so UI reflects the overdue status
+    const taskDue = new Date(task.dueTime);
+    // Create a new date object that represents the due time in the user's local time zone.
+    const localTaskDue = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate(), taskDue.getHours(), taskDue.getMinutes(), taskDue.getSeconds());
+
+    if (!task.checked && localTaskDue <= now) {
       task.alarmTriggered = true;
       shouldPlayAlarm = true;
     }
   });
 
   saveTasks(tasks);
-  renderTasks(); // Update UI without playing the alarm
+  renderTasks();
 
-  // If at least one task is overdue, play the alarm sound once
   if (shouldPlayAlarm) {
     const alarmSound = document.getElementById('alarm-sound');
-    // Stop the sound if it's playing, reset, and then play it once.
     alarmSound.pause();
     alarmSound.currentTime = 0;
     alarmSound.play().catch(err => {
