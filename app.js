@@ -115,8 +115,7 @@ function checkDueTime() {
   let changed = false;
   const now = new Date();
 
-  //Subtract one hour to compare with data save time.
-  now.setHours(now.getHours() - 1);
+  now.setHours(now.getHours() + 1);
 
   // Today's date at midnight
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -126,11 +125,6 @@ function checkDueTime() {
     const taskDue = new Date(task.dueTime);
     // Create a date object for the task's date (without time)
     const taskDueDate = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate());
-
-    // Current time
-    console.log("Time now ", now);
-    console.log(taskDueDate);
-
 
     // If the task's due date is before today, update it to today (preserving the time)
     if (taskDueDate < today) {
@@ -167,9 +161,6 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
   const today = new Date();
   const [hours, minutes] = timeInput.split(':');
   today.setHours(hours, minutes, 0, 0);
-
-  // Add one hour to the due time
-  // today.setHours(today.getHours() + 1);
 
   const newTask = {
     id: generateId(),
