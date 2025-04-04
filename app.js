@@ -70,7 +70,6 @@ function deleteTask(id) {
 function checkOverdueTasks() {
   const tasks = getTasks();
   const now = new Date();
-  now.setHours(now.getHours() - 1);
   let shouldPlayAlarm = false;
 
   // Mark tasks as overdue (set alarmTriggered to true)
@@ -79,7 +78,6 @@ function checkOverdueTasks() {
       // Always set alarmTriggered so UI reflects the overdue status
       task.alarmTriggered = true;
       shouldPlayAlarm = true;
-      console.log(task.dueTime, "  ", now);
     }
   });
 
