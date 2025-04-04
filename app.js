@@ -115,8 +115,6 @@ function checkDueTime() {
   let changed = false;
   const now = new Date();
 
-  now.setHours(now.getHours() + 1);
-
   // Today's date at midnight
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
