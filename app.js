@@ -99,7 +99,7 @@ function checkOverdueTasks() {
 // Reset all tasks at 4 AM (this checks every minute)
 function resetTasksAtFourAM() {
   const now = new Date();
-  if (now.getHours() === 4 && now.getMinutes() === 0) {
+  if (now.getUTCHours() === 4 && now.getUTCMinutes() === 0) { // Use UTC hours and minutes
     const tasks = getTasks();
     tasks.forEach(task => {
       task.checked = false;
@@ -115,20 +115,20 @@ function checkDueTime() {
   let changed = false;
   const now = new Date();
 
-  // Today's date at midnight
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Today's date at midnight UTC
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
   tasks.forEach(task => {
     // Convert dueTime string to a Date object
     const taskDue = new Date(task.dueTime);
     // Create a date object for the task's date (without time)
-    const taskDueDate = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate());
+    const taskDueDate = new Date(Date.UTC(taskDue.getUTCFullYear(), taskDue.getUTCMonth(), taskDue.getUTCDate()));
 
     // If the task's due date is before today, update it to today (preserving the time)
     if (taskDueDate < today) {
       // Create a new due time for today with the same hour, minute, second, and millisecond
-      let newDueTime = new Date(today);
-      newDueTime.setHours(taskDue.getHours(), taskDue.getMinutes(), taskDue.getSeconds(), taskDue.getMilliseconds());
+      let newDueTime = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+      newDueTime.setUTCHours(taskDue.getUTCHours(), taskDue.getUTCMinutes(), taskDue.getUTCSeconds(), taskDue.getUTCMilliseconds());
 
       task.dueTime = newDueTime.toISOString();
       // Optionally, reset the alarm flag so the alarm check starts fresh for the new day:
@@ -156,14 +156,14 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
   const timeInput = document.getElementById('due-time').value; // e.g., "14:30"
 
   // Combine today's date with the provided time
-  const today = new Date();
+  const now = new Date();
   const [hours, minutes] = timeInput.split(':');
-  today.setHours(hours, minutes, 0, 0);
+  now.setHours(hours, minutes, 0, 0);
 
   const newTask = {
     id: generateId(),
     name: name,
-    dueTime: today.toISOString(),
+    dueTime: now.toISOString(),
     checked: false,
     alarmTriggered: false
   };
