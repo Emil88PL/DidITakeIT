@@ -127,6 +127,11 @@ function checkDueTime() {
     // Create a date object for the task's date (without time)
     const taskDueDate = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate());
 
+    // Current time
+    console.log("Time now ", now);
+    console.log(taskDueDate);
+
+
     // If the task's due date is before today, update it to today (preserving the time)
     if (taskDueDate < today) {
       // Create a new due time for today with the same hour, minute, second, and millisecond
@@ -149,7 +154,7 @@ function checkDueTime() {
 
 // Set intervals to check for overdue tasks and reset tasks at 4 AM every minute
 setInterval(checkOverdueTasks, 60000);
-setInterval(resetTasksAtFourAM, 60000);
+setInterval(resetTasksAtFourAM, 123000);
 setInterval(checkDueTime, 30000);
 
 // Handle task form submission
