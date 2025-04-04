@@ -126,6 +126,9 @@ function checkDueTime() {
     // Create a date object for the task's date (without time)
     const taskDueDate = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate());
 
+    // Current time
+    console.log("Time now ", now);
+
     // If the task's due date is before today, update it to today (preserving the time)
     if (taskDueDate < today) {
       // Create a new due time for today with the same hour, minute, second, and millisecond
