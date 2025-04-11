@@ -1,3 +1,46 @@
+// Global interval variables
+let overdueInterval;
+let dueTimeInterval;
+
+// Function to load check frequency from localStorage, default to 1 minute if not set
+function loadCheckFrequency() {
+  return localStorage.getItem('checkFrequency') || "1";
+}
+
+// Function to save check frequency to localStorage
+function saveCheckFrequency(frequency) {
+  localStorage.setItem('checkFrequency', frequency);
+}
+
+// Function to set up intervals based on selected frequency
+function setupIntervals() {
+  // Clear any existing intervals
+  if (overdueInterval) clearInterval(overdueInterval);
+  if (dueTimeInterval) clearInterval(dueTimeInterval);
+
+  // Get selected frequency (value in minutes)
+  const frequencyDropdown = document.getElementById('check-frequency');
+  const frequencyMinutes = parseInt(frequencyDropdown.value, 10);
+  const frequencyMs = frequencyMinutes * 60000;
+
+  // Save the selected frequency
+  saveCheckFrequency(frequencyDropdown.value);
+
+  // Set new intervals using the selected frequency
+  overdueInterval = setInterval(checkOverdueTasks, frequencyMs);
+  dueTimeInterval = setInterval(checkDueTime, frequencyMs);
+}
+
+// On page load, set the frequency dropdown value from localStorage and initialize intervals
+document.addEventListener("DOMContentLoaded", () => {
+  const frequencyDropdown = document.getElementById('check-frequency');
+  frequencyDropdown.value = loadCheckFrequency();
+  setupIntervals();
+});
+
+// Listen to changes in the frequency dropdown
+document.getElementById('check-frequency').addEventListener('change', setupIntervals);
+
 // Helper: get tasks from localStorage
 function getTasks() {
   const tasksJSON = localStorage.getItem('tasks');
@@ -9,7 +52,7 @@ function saveTasks(tasks) {
   localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
-// Helper: generate a unique id (using timestamp)
+// Helper: generate a unique id (using timestamp + random component)
 function generateId() {
   return Date.now().toString() + Math.floor(Math.random() * 10000).toString();
 }
@@ -107,17 +150,13 @@ function renderTasks() {
   });
 }
 
-
 // Toggle a task's checked state
 function toggleTask(id, checked) {
   const tasks = getTasks();
   const task = tasks.find(t => t.id === id);
   if (task) {
     task.checked = checked;
-    // If checked, reset the alarm flag.
-    if (checked) {
-      task.alarmTriggered = false;
-    }
+    if (checked) task.alarmTriggered = false;
     saveTasks(tasks);
     renderTasks();
   }
@@ -131,7 +170,7 @@ function deleteTask(id) {
   renderTasks();
 }
 
-// Edit title and dueTime of the task and change task.isPreset to false
+// Edit a task's name and due time, and mark it as not preset
 function editTask(id) {
   const tasks = getTasks();
   const task = tasks.find(t => t.id === id);
@@ -139,15 +178,10 @@ function editTask(id) {
 
   // Prompt for new name; if Cancel is pressed, no change is made.
   const newName = prompt("Edit task name:", task.name);
-  if (newName === null) return; // Cancel editing
-
-  // Get the current due time as a localized string formatted as HH:MM.
-  // Note: Adjust formatting as needed. Here, we assume the user enters in "HH:MM" format.
-  const currentDueTime = new Date(task.dueTime).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
+  if (newName === null) return;
+  const currentDueTime = new Date(task.dueTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
   const newDueTime = prompt("Edit task due time (HH:MM):", currentDueTime);
-  if (newDueTime === null) return; // Cancel editing
-
-  // Parse the new due time, using today's date.
+  if (newDueTime === null) return;
   const today = new Date();
   const [hours, minutes] = newDueTime.split(':').map(Number);
   today.setHours(hours, minutes, 0, 0);
@@ -155,13 +189,10 @@ function editTask(id) {
   // Update task properties
   task.name = newName;
   task.dueTime = today.toISOString();
-  task.isPreset = false; // Mark as not preset after editing
-
-  // Save and re-render the tasks
+  task.isPreset = false;
   saveTasks(tasks);
   renderTasks();
 }
-
 
 // Check for overdue tasks and trigger the alarm if needed
 function checkOverdueTasks() {
@@ -187,16 +218,14 @@ function checkOverdueTasks() {
     const alarmSound = document.getElementById('alarm-sound');
     alarmSound.pause();
     alarmSound.currentTime = 0;
-    alarmSound.play().catch(err => {
-      console.warn("Alarm playback prevented until user interaction", err);
-    });
+    alarmSound.play().catch(err => console.warn("Alarm playback prevented until user interaction", err));
   }
 }
 
 // Reset all tasks at 4 AM (this checks every minute)
 function resetTasksAtFourAM() {
   const now = new Date();
-  if (now.getUTCHours() === 4 && now.getUTCMinutes() === 0) { // Use UTC hours and minutes
+  if (now.getUTCHours() === 4 && now.getUTCMinutes() === 0) {
     const tasks = getTasks();
     tasks.forEach(task => {
       task.checked = false;
@@ -241,11 +270,6 @@ function checkDueTime() {
   }
 }
 
-// Set intervals to check for overdue tasks and reset tasks at 4 AM every minute
-setInterval(checkOverdueTasks, 60000);
-setInterval(resetTasksAtFourAM, 123000);
-setInterval(checkDueTime, 30000);
-
 // Event listener for the preset drop-down
 document.getElementById('preset-select').addEventListener('change', function(e) {
   const newPreset = e.target.value;
@@ -284,9 +308,7 @@ document.getElementById('preset-select').addEventListener('change', function(e) 
 document.getElementById('task-form').addEventListener('submit', function(e) {
   e.preventDefault();
   const name = document.getElementById('task-name').value;
-  const timeInput = document.getElementById('due-time').value; // e.g., "14:30"
-
-  // Combine today's date with the provided time
+  const timeInput = document.getElementById('due-time').value;
   const now = new Date();
   const [hours, minutes] = timeInput.split(':');
   now.setHours(hours, minutes, 0, 0);
@@ -297,7 +319,7 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
     dueTime: now.toISOString(),
     checked: false,
     alarmTriggered: false,
-    isPreset: false // this task is manually added
+    isPreset: false
   };
 
   const tasks = getTasks();
