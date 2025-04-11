@@ -29,3 +29,6 @@ DidITakeIT is a simple daily task reminder application designed to help you reme
 3. **Alarm Behavior:**  
    The sound plays once per minute for any overdue task until you mark it as complete.
 
+## Preset tasks
+###### (new version uses better id format all old need to be deleted manually - might fix that tho)
+![img.png](img.png)
