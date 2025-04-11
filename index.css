@@ -50,6 +50,10 @@ ul, ol {
     gap: 10px;
 }
 
+.container > div:nth-child(2) {
+    margin-right: auto; /* Pushes the second div to stick to the left */
+}
+
 @media screen and (max-width: 400px) {
     #task-form {
         display: flex;
@@ -91,3 +95,7 @@ ul, ol {
     background-color: #006494;
 }
 
+form#task-form input, #check-frequency {
+    border-radius: 3px;
+    border: none;
+}
