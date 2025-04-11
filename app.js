@@ -98,6 +98,7 @@ function renderTasks() {
         </div>
         <div>
           <button onclick="deleteTask('${task.id}')" class="deleteButton">Delete</button>
+          <button onclick="editTask('${task.id}')" class="editButton">Edit</button>
         </div>
       </div>
       ${task.alarmTriggered ? '<strong style="color:red;"> Unfinished Task!</strong>' : ''}
@@ -129,6 +130,38 @@ function deleteTask(id) {
   saveTasks(tasks);
   renderTasks();
 }
+
+// Edit title and dueTime of the task and change task.isPreset to false
+function editTask(id) {
+  const tasks = getTasks();
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+
+  // Prompt for new name; if Cancel is pressed, no change is made.
+  const newName = prompt("Edit task name:", task.name);
+  if (newName === null) return; // Cancel editing
+
+  // Get the current due time as a localized string formatted as HH:MM.
+  // Note: Adjust formatting as needed. Here, we assume the user enters in "HH:MM" format.
+  const currentDueTime = new Date(task.dueTime).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
+  const newDueTime = prompt("Edit task due time (HH:MM):", currentDueTime);
+  if (newDueTime === null) return; // Cancel editing
+
+  // Parse the new due time, using today's date.
+  const today = new Date();
+  const [hours, minutes] = newDueTime.split(':').map(Number);
+  today.setHours(hours, minutes, 0, 0);
+
+  // Update task properties
+  task.name = newName;
+  task.dueTime = today.toISOString();
+  task.isPreset = false; // Mark as not preset after editing
+
+  // Save and re-render the tasks
+  saveTasks(tasks);
+  renderTasks();
+}
+
 
 // Check for overdue tasks and trigger the alarm if needed
 function checkOverdueTasks() {

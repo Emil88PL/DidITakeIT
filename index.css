@@ -77,3 +77,19 @@ ul, ol {
     color: #333;
     cursor: pointer;
 }
+
+.editButton {
+    background: #008CBA;
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-left: 5px;
+}
+
+.editButton:hover {
+    background-color: #006494;
+}
+
