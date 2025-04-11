@@ -18,17 +18,19 @@ DidITakeIT is a simple daily task reminder application designed to help you reme
 
 ## Screenshots
 
-![img_1.png](img_1.png)
+![img_2.png](img_2.png)
 
 ## How It Works
 
-1. **Add Your Task:**  
-   Enter the task name and set the due time (tasks are always for today).
-2. **Complete Your Task:**  
-   Check off the task once it's done. If left unchecked, the alarm sound will continue playing once every minute.
-3. **Alarm Behavior:**  
-   The sound plays once per minute for any overdue task until you mark it as complete.
+1. **Add Your Task:**
+    - Enter the task name and set the due time (tasks are always for today).
+    - Alternatively, use the "Add preset tasks" dropdown to select from pre-defined task templates.
+        - **Note:** You can edit the task name and due time of preset tasks after adding them.
 
-## Preset tasks
-###### (new version uses better id format all old need to be deleted manually - might fix that tho)
-![img.png](img.png)
+2. **Complete Your Task:**
+    - Check off the task once it's done.
+    - If left unchecked, the alarm sound will continue playing at the specified frequency.
+
+3. **Alarm Behavior:**
+    - The sound plays repeatedly for any overdue task until you mark it as complete.
+    - You can adjust the frequency of the alarm sound using the "Check Frequency" dropdown (e.g., 1 min, 5 min, etc.).
