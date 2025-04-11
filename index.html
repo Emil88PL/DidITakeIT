@@ -18,7 +18,6 @@
 <body>
 <h1>Task Alarm App</h1>
 
-<!-- Preset tasks drop-down -->
 <div>
     <label for="preset-select">Add preset tasks:</label>
     <select id="preset-select">
@@ -33,14 +32,12 @@
 
 <form id="task-form">
     <input type="text" id="task-name" placeholder="Task name" required />
-    <!-- Input for time (tasks are always for today) -->
     <input type="time" id="due-time" required />
     <button type="submit" class="addButton">Add Task</button>
 </form>
 
 <ul id="task-list"></ul>
 
-<!-- Add this block in your HTML where you want the check frequency dropdown to appear -->
 <div>
     <label for="check-frequency">Check Frequency:</label>
     <select id="check-frequency">

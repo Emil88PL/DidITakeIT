@@ -10,7 +10,9 @@ body {
     margin: 0;
 }
 
-.addButton, .deleteButton {
+.addButton,
+.deleteButton,
+.editButton {
     margin-top: 7px;
     padding: 10px;
     border: none;
@@ -67,6 +69,29 @@ ul, ol {
     }
     body {
         padding: 20px;
+    }
+
+    button {
+
+    }
+
+    .container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1px;
+    }
+
+    .container > div:nth-child(2) {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .container > div:nth-child(3) {
+        display: flex;
+        flex-direction: row;
     }
 }
 

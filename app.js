@@ -57,7 +57,7 @@ function generateId() {
   return Date.now().toString() + Math.floor(Math.random() * 10000).toString();
 }
 
-// Preset tasks definitions
+// Preset tasks definitions that's needs adjustment
 const presetTasks = {
   training: [
     { time: "05:00", name: "Wake up" },
