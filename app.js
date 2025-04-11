@@ -17,19 +17,62 @@ function generateId() {
 // Preset tasks definitions
 const presetTasks = {
   training: [
-    { id: "0", time: "05:00", name: "woke up" },
-    { id: "1",time: "05:30", name: "train" },
-    { id: "2",time: "06:00", name: "drink water" }
+    { time: "05:00", name: "Wake up" },
+    { time: "05:15", name: "Drink 500ml water" },
+    { time: "05:30", name: "Dynamic stretching" },
+    { time: "05:45", name: "Cardio warm-up" },
+    { time: "06:00", name: "Main workout" },
+    { time: "07:00", name: "Cool down" },
+    { time: "07:15", name: "Protein shake" },
+    { time: "07:30", name: "Shower" },
+    { time: "08:00", name: "Healthy breakfast" }
   ],
+
   learning: [
-    { time: "06:00", name: "read a book" },
-    { time: "07:00", name: "take a break - rest eyes" },
-    { time: "08:00", name: "keep reading you doing great!" }
+    { time: "09:00", name: "Set daily learning goals" },
+    { time: "09:15", name: "Read technical material" },
+    { time: "10:15", name: "Take detailed notes" },
+    { time: "10:45", name: "Rest eyes - look at distance" },
+    { time: "11:00", name: "Practice exercises" },
+    { time: "12:00", name: "Lunch break" },
+    { time: "13:00", name: "Review morning materials" },
+    { time: "14:00", name: "Deep work session" },
+    { time: "15:30", name: "Take a walk - process information" }
   ],
+
   motivational: [
-    { time: "06:30", name: "Good morning you doing great!" },
-    { time: "07:30", name: "Keep up! everything is fine!" },
-    { time: "09:30", name: "You doing Great!" }
+    { time: "06:30", name: "Good morning! You're up and making progress!" },
+    { time: "08:30", name: "Great start to the day - keep the momentum!" },
+    { time: "10:30", name: "Stay focused, you're doing fantastic work!" },
+    { time: "12:30", name: "Halfway through the day - you got this!" },
+    { time: "14:30", name: "Your dedication is inspiring!" },
+    { time: "16:30", name: "Push through - excellence takes persistence!" },
+    { time: "18:30", name: "Reflect on today's wins, big and small" },
+    { time: "20:30", name: "Wind down - you've earned your rest" }
+  ],
+
+  productivity: [
+    { time: "08:30", name: "Plan your day and set priorities" },
+    { time: "09:00", name: "Focus on most important task" },
+    { time: "10:30", name: "Check and respond to urgent emails" },
+    { time: "11:00", name: "Second important task" },
+    { time: "12:30", name: "Reflect on morning progress" },
+    { time: "13:30", name: "Third important task" },
+    { time: "15:00", name: "Quick administrative work" },
+    { time: "16:00", name: "Plan for tomorrow" },
+    { time: "17:00", name: "Review day's accomplishments" }
+  ],
+
+  wellness: [
+    { time: "07:00", name: "Morning meditation" },
+    { time: "10:00", name: "Hydration check" },
+    { time: "12:00", name: "Mindful eating lunch" },
+    { time: "14:00", name: "Quick breathing exercise" },
+    { time: "15:30", name: "Stretch break" },
+    { time: "17:00", name: "Evening walk" },
+    { time: "19:00", name: "Screen-free time" },
+    { time: "21:00", name: "Evening reflection" },
+    { time: "22:00", name: "Sleep preparation routine" }
   ]
 };
 
