@@ -56,8 +56,18 @@ ul, ol {
     gap: 10px;
 }
 
+.container > div:nth-child(1) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .container > div:nth-child(2) {
     margin-right: auto; /* Pushes the second div to stick to the left */
+}
+
+.container > div:nth-child(3) {
+    display: flex;
+    flex-direction: row;
 }
 
 @media screen and (max-width: 400px) {
@@ -75,10 +85,6 @@ ul, ol {
         padding: 20px;
     }
 
-    button {
-
-    }
-
     .container {
         display: flex;
         flex-direction: row;
@@ -88,9 +94,7 @@ ul, ol {
     }
 
     .container > div:nth-child(2) {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        margin-left: 10px;
     }
 
     .container > div:nth-child(3) {
