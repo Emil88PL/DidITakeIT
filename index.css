@@ -2,8 +2,6 @@ body {
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #1e3c72, #373636);
     color: #fff;
-    padding-top: 100px;
-
     display: flex;
     flex-direction: column;
     justify-content: flex-start; /* Pushes content higher */
