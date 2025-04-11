@@ -68,3 +68,12 @@ ul, ol {
     }
 }
 
+#preset-select {
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 20px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+}

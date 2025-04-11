@@ -11,8 +11,28 @@ function saveTasks(tasks) {
 
 // Helper: generate a unique id (using timestamp)
 function generateId() {
-  return Date.now();
+  return Date.now().toString() + Math.floor(Math.random() * 10000).toString();
 }
+
+// Preset tasks definitions
+const presetTasks = {
+  training: [
+    { id: "0", time: "05:00", name: "woke up" },
+    { id: "1",time: "05:30", name: "train" },
+    { id: "2",time: "06:00", name: "drink water" }
+  ],
+  learning: [
+    { time: "06:00", name: "read a book" },
+    { time: "07:00", name: "take a break - rest eyes" },
+    { time: "08:00", name: "keep reading you doing great!" }
+  ],
+  motivational: [
+    { time: "06:30", name: "Good morning you doing great!" },
+    { time: "07:30", name: "Keep up! everything is fine!" },
+    { time: "09:30", name: "You doing Great!" }
+  ]
+};
+
 
 // Render the task list on the page
 function renderTasks() {
@@ -28,13 +48,13 @@ function renderTasks() {
     li.innerHTML = `
       <div class="container">
         <div>
-          <input type="checkbox" ${task.checked ? 'checked' : ''} onchange="toggleTask(${task.id}, this.checked)">
+          <input type="checkbox" ${task.checked ? 'checked' : ''} onchange="toggleTask('${task.id}', this.checked)">
         </div>
         <div>
           <span>${task.name} (Due: ${new Date(task.dueTime).toLocaleTimeString()})</span>
         </div>
         <div>
-          <button onclick="deleteTask(${task.id})" class="deleteButton">Delete</button>
+          <button onclick="deleteTask('${task.id}')" class="deleteButton">Delete</button>
         </div>
       </div>
       ${task.alarmTriggered ? '<strong style="color:red;"> Unfinished Task!</strong>' : ''}
@@ -42,6 +62,7 @@ function renderTasks() {
     list.appendChild(li);
   });
 }
+
 
 // Toggle a task's checked state
 function toggleTask(id, checked) {
@@ -149,7 +170,41 @@ setInterval(checkOverdueTasks, 60000);
 setInterval(resetTasksAtFourAM, 123000);
 setInterval(checkDueTime, 30000);
 
-// Handle task form submission
+// Event listener for the preset drop-down
+document.getElementById('preset-select').addEventListener('change', function(e) {
+  const newPreset = e.target.value;
+  let tasks = getTasks();
+
+  // Remove all tasks that were added by a preset (identified by isPreset property)
+  tasks = tasks.filter(task => !task.isPreset);
+
+  // Only add preset tasks if a valid preset is selected (non-empty value)
+  if (newPreset && presetTasks[newPreset]) {
+    presetTasks[newPreset].forEach(item => {
+      // Create a date for today with the preset task time
+      const today = new Date();
+      // Split time string "HH:MM" into hours and minutes
+      const [hours, minutes] = item.time.split(':').map(Number);
+      const dueTimeDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes, 0, 0);
+
+      // Create the preset task and mark it with isPreset and presetType
+      tasks.push({
+        id: generateId(),
+        name: item.name,
+        dueTime: dueTimeDate.toISOString(),
+        checked: false,
+        alarmTriggered: false,
+        isPreset: true,
+        presetType: newPreset
+      });
+    });
+  }
+
+  saveTasks(tasks);
+  renderTasks();
+});
+
+// Handle task form submission (manual task addition)
 document.getElementById('task-form').addEventListener('submit', function(e) {
   e.preventDefault();
   const name = document.getElementById('task-name').value;
@@ -165,7 +220,8 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
     name: name,
     dueTime: now.toISOString(),
     checked: false,
-    alarmTriggered: false
+    alarmTriggered: false,
+    isPreset: false // this task is manually added
   };
 
   const tasks = getTasks();

@@ -17,6 +17,18 @@
 </head>
 <body>
 <h1>Task Alarm App</h1>
+
+<!-- Preset tasks drop-down -->
+<div>
+    <label for="preset-select">Add preset tasks:</label>
+    <select id="preset-select">
+        <option value="">Select preset</option>
+        <option value="training">Training</option>
+        <option value="learning">Learning</option>
+        <option value="motivational">Motivational</option>
+    </select>
+</div>
+
 <form id="task-form">
     <input type="text" id="task-name" placeholder="Task name" required />
     <!-- Input for time (tasks are always for today) -->
