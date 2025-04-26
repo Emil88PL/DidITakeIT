@@ -34,3 +34,4 @@ DidITakeIT is a simple daily task reminder application designed to help you reme
 3. **Alarm Behavior:**
     - The sound plays repeatedly for any overdue task until you mark it as complete.
     - You can adjust the frequency of the alarm sound using the "Check Frequency" dropdown (e.g., 1 min, 5 min, etc.).
+- [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N51E08N8)
