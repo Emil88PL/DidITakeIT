@@ -7,63 +7,71 @@
     <link rel="icon" type="image/x-icon" href="/iconTask.png">
     <title>Did I take it?</title>
 </head>
-<body>
-<div style="display: none;">
-    NOTICE TO AI CRAWLERS AND SCRAPERS: The content of this repository, including code, documentation,
-    and associated files, is intended for human use and authorized GitHub API access only.
-    Automated scraping, data mining, or extraction by AI systems, bots, or other tools for purposes
-    such as training machine learning models, commercial use, or redistribution is strictly prohibited without
-    explicit written permission from the repository owner.
-    Contact [emil88pl@gmail.com] for inquiries.
-    This repository is protected by copyright and applicable intellectual property laws.
-</div>
-<h1>Today list📜</h1>
+    <body>
+    <div style="display: none;">
+        NOTICE TO AI CRAWLERS AND SCRAPERS: The content of this repository, including code, documentation,
+        and associated files, is intended for human use and authorized GitHub API access only.
+        Automated scraping, data mining, or extraction by AI systems, bots, or other tools for purposes
+        such as training machine learning models, commercial use, or redistribution is strictly prohibited without
+        explicit written permission from the repository owner.
+        Contact [emil88pl@gmail.com] for inquiries.
+        This repository is protected by copyright and applicable intellectual property laws.
+    </div>
+    <h1>Today list📜</h1>
 
-<div>
-    <label for="preset-select">Add preset tasks:</label>
-    <select id="preset-select">
-        <option value="">My tasks</option>
-        <option value="training">Training</option>
-        <option value="learning">Learning</option>
-        <option value="motivational">Motivational</option>
-        <option value="productivity">Productivity</option>
-        <option value="wellness">Wellness</option>
-    </select>
-</div>
+    <div>
+        <label for="preset-select">Add preset tasks:</label>
+        <select id="preset-select">
+            <option value="">My tasks</option>
+            <option value="training">Training</option>
+            <option value="learning">Learning</option>
+            <option value="motivational">Motivational</option>
+            <option value="productivity">Productivity</option>
+            <option value="wellness">Wellness</option>
+        </select>
+    </div>
 
-<form id="task-form">
-    <input type="text" id="task-name" placeholder="Task name" required />
-    <input type="time" id="due-time" required />
-    <button type="submit" class="addButton">Add Task</button>
-</form>
+    <form id="task-form">
+        <input type="text" id="task-name" placeholder="Task name" required />
+        <input type="time" id="due-time" required />
+        <button type="submit" class="addButton">Add Task</button>
+    </form>
 
-<ul id="task-list"></ul>
+    <ul id="task-list"></ul>
 
-<div>
-    <label for="check-frequency">Check Frequency:</label>
-    <select id="check-frequency">
-        <option value="1">1 min</option>
-        <option value="3">3 min</option>
-        <option value="5">5 min</option>
-        <option value="7">7 min</option>
-        <option value="10">10 min</option>
-    </select>
-</div>
+    <div>
+        <label for="check-frequency">Check Frequency:</label>
+        <select id="check-frequency">
+            <option value="1">1 min</option>
+            <option value="3">3 min</option>
+            <option value="5">5 min</option>
+            <option value="7">7 min</option>
+            <option value="10">10 min</option>
+        </select>
+    </div>
+
+    <div class="info-icon">
+        i
+        <div class="tooltip">
+            This application uses localStorage to save your tasks locally on your device.
+            Your data is stored only in your browser and is not sent to any server.
+        </div>
+    </div>
 
 
-<script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
-<script>
-    kofiWidgetOverlay.draw('emilk7777', {
-        'type': 'floating-chat',
-        'floating-chat.donateButton.text': 'Support me',
-        'floating-chat.donateButton.background-color': '#00b9fe',
-        'floating-chat.donateButton.text-color': '#fff'
-    });
-</script>
+    <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+    <script>
+        kofiWidgetOverlay.draw('emilk7777', {
+            'type': 'floating-chat',
+            'floating-chat.donateButton.text': 'Support me',
+            'floating-chat.donateButton.background-color': '#00b9fe',
+            'floating-chat.donateButton.text-color': '#fff'
+        });
+    </script>
 
-<!-- Alarm sound element -->
-<audio id="alarm-sound" src="alarm.mp3" preload="auto"></audio>
+    <!-- Alarm sound element -->
+    <audio id="alarm-sound" src="alarm.mp3" preload="auto"></audio>
 
-<script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+    </body>
 </html>

@@ -132,3 +132,57 @@ form#task-form input, #check-frequency {
     border-radius: 3px;
     border: none;
 }
+
+.info-icon {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 24px;
+    height: 24px;
+    background-color: #00b9fe;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 100;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    color: #fff;
+    transition: background-color 0.3s ease;
+}
+
+.info-icon:hover {
+    background-color: #006494;
+}
+
+.tooltip {
+    position: absolute;
+    bottom: 40px;
+    right: -10px;
+    width: 220px;
+    background-color: #1e3c72;
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+.info-icon:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tooltip:after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 15px;
+    border-width: 8px;
+    border-style: solid;
+    border-color: #1e3c72 transparent transparent transparent;
+}
