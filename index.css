@@ -170,6 +170,7 @@ form#task-form input, #check-frequency {
     visibility: hidden;
     transition: opacity 0.3s, visibility 0.3s;
     box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    text-align: center;
 }
 
 .info-icon:hover .tooltip {
