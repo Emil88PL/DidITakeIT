@@ -186,3 +186,15 @@ form#task-form input, #check-frequency {
     border-style: solid;
     border-color: #1e3c72 transparent transparent transparent;
 }
+
+.tooltip a:link,
+.tooltip a:visited,
+.tooltip a:hover,
+.tooltip a:active {
+    text-decoration: none;
+    color: rgba(11, 232, 18, 0.58);
+}
+
+.tooltip a:hover {
+    color: rgba(11, 232, 18, 0.8);
+}
