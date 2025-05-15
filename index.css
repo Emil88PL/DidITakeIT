@@ -199,3 +199,26 @@ form#task-form input, #check-frequency {
 .tooltip a:hover {
     color: rgba(11, 232, 18, 0.8);
 }
+
+.telegram-container {
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+}
+
+.inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+}
+button {
+    padding: 5px 10px;
+}

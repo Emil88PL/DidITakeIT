@@ -2,6 +2,9 @@
 let overdueInterval;
 let dueTimeInterval;
 
+// Session (in-memory) credentials when user clicks “Use”
+let sessionTelegram = { botToken: null, chatId: null, toggle: "OFF" };
+
 // Function to load check frequency from localStorage, default to 1 minute if not set
 function loadCheckFrequency() {
   return localStorage.getItem('checkFrequency') || "1";
@@ -194,31 +197,97 @@ function editTask(id) {
   renderTasks();
 }
 
-// Check for overdue tasks and trigger the alarm if needed
+// Function to send Telegram message for overdue tasks
+function sendTelegramMessage(task) {
+  // Try persisted creds only if both token & chatId are non‑empty
+  let raw = localStorage.getItem("telegramDidITakeIt");
+  let botToken, chatId, toggle;
+
+  if (raw) {
+    const parsed = JSON.parse(raw);
+    if (parsed.value1 && parsed.value2) {
+      botToken = parsed.value1;
+      chatId   = parsed.value2;
+      toggle   = parsed.toggle;
+    }
+  }
+
+  // If persisted were empty, fall back to session creds
+  if (!botToken || !chatId) {
+    if (sessionTelegram.botToken && sessionTelegram.chatId) {
+      botToken = sessionTelegram.botToken;
+      chatId   = sessionTelegram.chatId;
+      toggle   = sessionTelegram.toggle;
+    } else {
+      console.warn("No Telegram credentials found (neither saved nor in session).");
+      return;
+    }
+  }
+
+  if (toggle !== "ON") {
+    console.log("Telegram notifications are OFF in settings.");
+    return;
+  }
+
+  const dueTimeStr = new Date(task.dueTime).toLocaleString();
+  const messageText = `Hi! there is overdue Task: ${task.name} (Due: ${dueTimeStr})`;
+  const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(messageText)}`;
+
+  fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (!data.ok) {
+          console.error("Failed to send Telegram message. Description:", data.description);
+        }
+      })
+      .catch(error => {
+        console.error("Error sending Telegram message (fetch failed):", error);
+      });
+}
+
+// Check for overdue tasks and trigger the alarm and Telegram message if needed
 function checkOverdueTasks() {
+  // // console.log("checkOverdueTasks called at", new Date().toLocaleTimeString());
   const tasks = getTasks();
   const now = new Date();
   let shouldPlayAlarm = false;
+  let messageSentThisCheck = false;
 
   tasks.forEach(task => {
     const taskDue = new Date(task.dueTime);
-    // Create a new date object that represents the due time in the user's local time zone.
     const localTaskDue = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate(), taskDue.getHours(), taskDue.getMinutes(), taskDue.getSeconds());
 
+    // console.log(`Checking task: ${task.name}, Due: ${localTaskDue.toLocaleString()}, Now: ${now.toLocaleString()}, Checked: ${task.checked}, AlarmTriggered: ${task.alarmTriggered}`);
+
     if (!task.checked && localTaskDue <= now) {
-      task.alarmTriggered = true;
+      // console.log(`Task "${task.name}" is overdue.`);
+      if (!task.alarmTriggered) {
+        // console.log(`Alarm not yet triggered for "${task.name}". Triggering now.`);
+        task.alarmTriggered = true;
+        sendTelegramMessage(task);
+        messageSentThisCheck = true;
+      } else {
+        // console.log(`Alarm already triggered for "${task.name}". Not sending another Telegram message immediately.`);
+      }
       shouldPlayAlarm = true;
     }
   });
 
-  saveTasks(tasks);
-  renderTasks();
+  if (messageSentThisCheck || tasks.some(t => t.alarmTriggered && !t.checked)) {
+    saveTasks(tasks);
+    renderTasks(); //
+  }
+
 
   if (shouldPlayAlarm) {
     const alarmSound = document.getElementById('alarm-sound');
-    alarmSound.pause();
-    alarmSound.currentTime = 0;
-    alarmSound.play().catch(err => console.warn("Alarm playback prevented until user interaction", err));
+    if (alarmSound) { // Check if element exists
+      alarmSound.pause();
+      alarmSound.currentTime = 0;
+      alarmSound.play().catch(err => console.warn("Alarm playback prevented:", err));
+    } else {
+      console.warn("Alarm sound element not found!");
+    }
   }
 }
 
@@ -331,3 +400,139 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
 
 // Initial render of tasks on page load
 renderTasks();
+
+// Select elements
+const container = document.querySelector('.telegram-container');
+const inputs = container.querySelectorAll('.inputs input');
+const useButton    = container.querySelector('.buttons .use');
+const saveButton = container.querySelector('.buttons .save');
+const toggleButton = container.querySelector('.buttons .off');
+
+inputs[0].type = "password";
+inputs[1].type = "password";
+
+// Function to toggle use button
+function updateUseButtonClasses() {
+  if (useButton.textContent === "Use") {
+    useButton.classList.add("addButton");
+    useButton.classList.remove("editButton");
+  } else {
+    useButton.classList.add("editButton");
+    useButton.classList.remove("addButton");
+  }
+}
+
+
+// Function to update toggle button classes
+function updateToggleButtonClasses() {
+  if (toggleButton.textContent === "ON") {
+    toggleButton.classList.add("addButton");
+    toggleButton.classList.remove("deleteButton");
+  } else {
+    toggleButton.classList.add("deleteButton");
+    toggleButton.classList.remove("addButton");
+  }
+}
+
+// Function to update save button classes
+function updateSaveButtonClasses() {
+  if (saveButton.textContent === "Save") {
+    saveButton.classList.add("addButton");
+    saveButton.classList.remove("editButton");
+  } else if (saveButton.textContent === "Update") {
+    saveButton.classList.add("editButton");
+    saveButton.classList.remove("addButton");
+  }
+}
+
+// Function to load state from localStorage
+function loadState() {
+  const savedState = localStorage.getItem("telegramDidITakeIt");
+  if (savedState) {
+    const { value1, value2, toggle } = JSON.parse(savedState);
+    inputs[0].value = value1;
+    inputs[1].value = value2;
+    toggleButton.textContent = toggle;
+    inputs[0].disabled = true;
+    inputs[1].disabled = true;
+    saveButton.textContent = "Update";
+  } else {
+    toggleButton.textContent = "OFF";
+    saveButton.textContent = "Save";
+    inputs[0].disabled = false;
+    inputs[1].disabled = false;
+  }
+  useButton.textContent = "Update";
+  updateToggleButtonClasses();
+  updateSaveButtonClasses();
+  updateUseButtonClasses();
+}
+
+// Function to save state to localStorage
+function saveState() {
+  const value1 = inputs[0].value;
+  const value2 = inputs[1].value;
+  const toggle = toggleButton.textContent;
+  localStorage.setItem("telegramDidITakeIt", JSON.stringify({ value1, value2, toggle }));
+}
+
+// Function to save stat ON OFF to localStorage
+function saveStateONOFF() {
+  const savedState = localStorage.getItem("telegramDidITakeIt");
+  const { value1, value2 } = JSON.parse(savedState);
+  let toggle = toggleButton.textContent;
+  localStorage.setItem("telegramDidITakeIt", JSON.stringify({ value1, value2, toggle }));
+}
+
+// Load initial state
+loadState();
+
+// Event listener for save/update button
+saveButton.addEventListener('click', () => {
+  if (saveButton.textContent === "Save") {
+    saveState();
+    inputs[0].disabled = true;
+    inputs[1].disabled = true;
+    saveButton.textContent = "Update";
+    inputs[0].type = "password";
+    inputs[1].type = "password";
+  } else if (saveButton.textContent === "Update") {
+    inputs[0].disabled = false;
+    inputs[1].disabled = false;
+    saveButton.textContent = "Save";
+    inputs[0].type = "text";
+    inputs[1].type = "text";
+  }
+  updateSaveButtonClasses();
+});
+
+// “Use” button logic (session‑only, not persisted)
+useButton.addEventListener('click', () => {
+  const isUsing = useButton.textContent === "Use";
+
+  if (isUsing) {
+    sessionTelegram.botToken = inputs[0].value;
+    sessionTelegram.chatId   = inputs[1].value;
+    sessionTelegram.toggle   = toggleButton.textContent;
+
+    inputs[0].disabled = true;
+    inputs[1].disabled = true;
+    useButton.textContent = "Update";
+  } else {
+    inputs[0].disabled = false;
+    inputs[1].disabled = false;
+    useButton.textContent = "Use";
+  }
+
+  updateToggleButtonClasses();
+  updateUseButtonClasses();
+});
+
+
+// Event listener for toggle button
+toggleButton.addEventListener('click', () => {
+  toggleButton.textContent = toggleButton.textContent === "ON" ? "OFF" : "ON";
+  updateToggleButtonClasses();
+  saveStateONOFF();
+});
+
