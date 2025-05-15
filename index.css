@@ -267,3 +267,13 @@ button {
 .custom-tooltip:hover::after {
     opacity: 1;
 }
+
+[popover] {
+    border: 5px solid #00b9fe;
+}
+
+@media (max-width: 630px) {
+    .telegram-container {
+        margin-bottom: 50px;
+    }
+}
