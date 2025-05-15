@@ -491,19 +491,26 @@ loadState();
 // Event listener for save/update button
 saveButton.addEventListener('click', () => {
   if (saveButton.textContent === "Save") {
+    const ok = confirm(
+        "Storing your bot token & chat ID in localStorage could be insecure.\n" +
+        "Press OK to proceed, or Cancel if you’d rather not save."
+    );
+    if (!ok) return;
+
     saveState();
     inputs[0].disabled = true;
     inputs[1].disabled = true;
     saveButton.textContent = "Update";
     inputs[0].type = "password";
     inputs[1].type = "password";
-  } else if (saveButton.textContent === "Update") {
+  } else {
     inputs[0].disabled = false;
     inputs[1].disabled = false;
     saveButton.textContent = "Save";
     inputs[0].type = "text";
     inputs[1].type = "text";
   }
+
   updateSaveButtonClasses();
 });
 
