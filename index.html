@@ -59,7 +59,37 @@
             <a href='https://local-llm-deep-seek.vercel.app/' target='_blank'>DeepSeek AI</a> !
         </div>
     </div>
+
+
+    <div popover id="my-popover" class="telegram-popover">
+        <h3>Telegram notifications</h3>
+        <p>
+            You need two values <strong>Bot token</strong> and <strong>Chat ID</strong>.
+        </p>
+        <h4>Getting the Bot Token</h4>
+        <ol>
+            <li>Launch the Telegram app on your phone, computer, or web browser.</li>
+            <li>In the search bar, type <strong>@BotFather</strong> and press Enter.</li>
+            <li>Select the official BotFather account (the one with a checkmark).</li>
+            <li>Click “Start” at the bottom of the chat to begin.</li>
+            <li>Type <strong>/newbot</strong> and send it to create a new bot.</li>
+            <li>Give your bot a name (e.g., <em>TaskNotifier</em>).</li>
+            <li>Choose a unique username ending in <strong>bot</strong> (e.g., <em>@TaskNotifierBot</em>).</li>
+            <li>When that’s accepted, BotFather will give you your <strong>bot token</strong>.</li>
+            <li>That long number will go to the first input <strong>Bot token</strong></li>
+            <li>Send at least one message to your new bot so it’s “activated.”</li>
+        </ol>
+        <h4>Getting the Chat ID</h4>
+        <ol>
+            <li>In Telegram’s search, find and start <strong>@GetIDsBot</strong>.</li>
+            <li>Send it any message (e.g., “Hi”).</li>
+            <li>The bot will reply with your numeric <strong>Chat ID</strong>.</li>
+            <li>That going to the second input <strong>Chat ID</strong></li>
+        </ol>
+    </div>
+
     <div class="telegram-container">
+        <button popovertarget="my-popover">Telegram notifications</button>
         <div class="inputs">
             <input type="text" placeholder="Bot token" onfocus="this.removeAttribute('readonly');"  />
             <input type="text" placeholder="Chat ID" onfocus="this.removeAttribute('readonly');" />
