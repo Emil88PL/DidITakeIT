@@ -237,3 +237,33 @@ button {
     color: #fff;
     transition: background-color 0.3s ease;
 }
+
+.clear:hover {
+    background-color: rgba(131, 0, 0, 0.7);
+}
+
+.custom-tooltip {
+    position: relative;
+    cursor: pointer;
+}
+
+.custom-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    font-size: 14px;
+    border-radius: 4px;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.custom-tooltip:hover::after {
+    opacity: 1;
+}
