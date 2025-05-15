@@ -407,6 +407,7 @@ const inputs = container.querySelectorAll('.inputs input');
 const useButton    = container.querySelector('.buttons .use');
 const saveButton = container.querySelector('.buttons .save');
 const toggleButton = container.querySelector('.buttons .off');
+const clearButton = container.querySelector('.buttons .clear');
 
 inputs[0].type = "password";
 inputs[1].type = "password";
@@ -536,3 +537,9 @@ toggleButton.addEventListener('click', () => {
   saveStateONOFF();
 });
 
+
+clearButton.addEventListener('click', () => {
+  localStorage.removeItem("telegramDidITakeIt");
+  sessionTelegram = { botToken: null, chatId: null, toggle: "OFF" };
+  loadState();
+});

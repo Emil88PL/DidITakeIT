@@ -222,3 +222,18 @@ form#task-form input, #check-frequency {
 button {
     padding: 5px 10px;
 }
+
+.clear {
+    margin-top: 7px;
+    background-color: rgba(237, 3, 3, 0.7);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 100;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    color: #fff;
+    transition: background-color 0.3s ease;
+}
