@@ -480,10 +480,24 @@ function saveState() {
 // Function to save stat ON OFF to localStorage
 function saveStateONOFF() {
   const savedState = localStorage.getItem("telegramDidITakeIt");
-  const { value1, value2 } = JSON.parse(savedState);
-  let toggle = toggleButton.textContent;
-  localStorage.setItem("telegramDidITakeIt", JSON.stringify({ value1, value2, toggle }));
+  // declare and default
+  let value1 = "";
+  let value2 = "";
+
+  if (savedState) {
+    // only overwrite if we actually have a saved blob
+    const parsed = JSON.parse(savedState);
+    value1 = parsed.value1 || "";
+    value2 = parsed.value2 || "";
+  }
+
+  const toggle = toggleButton.textContent;
+  localStorage.setItem(
+      "telegramDidITakeIt",
+      JSON.stringify({ value1, value2, toggle })
+  );
 }
+
 
 // Load initial state
 loadState();
