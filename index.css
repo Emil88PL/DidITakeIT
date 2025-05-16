@@ -270,6 +270,8 @@ button {
 
 [popover] {
     border: 5px solid #00b9fe;
+    background: linear-gradient(135deg, #5c8cd4, #7a7979);
+    border-radius: 10px;
 }
 
 @media (max-width: 630px) {
