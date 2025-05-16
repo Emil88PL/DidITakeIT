@@ -122,7 +122,6 @@ const presetTasks = {
   ]
 };
 
-
 // Render the task list on the page
 function renderTasks() {
   const tasks = getTasks();
@@ -198,7 +197,7 @@ function editTask(id) {
 }
 
 // Function to send Telegram message for overdue tasks
-function sendTelegramMessage(task) {
+function sendTelegramMessage(tasks) {
   // Try persisted creds only if both token & chatId are non‑empty
   let raw = localStorage.getItem("telegramDidITakeIt");
   let botToken, chatId, toggle;
@@ -207,8 +206,8 @@ function sendTelegramMessage(task) {
     const parsed = JSON.parse(raw);
     if (parsed.value1 && parsed.value2) {
       botToken = parsed.value1;
-      chatId   = parsed.value2;
-      toggle   = parsed.toggle;
+      chatId = parsed.value2;
+      toggle = parsed.toggle;
     }
   }
 
@@ -216,8 +215,8 @@ function sendTelegramMessage(task) {
   if (!botToken || !chatId) {
     if (sessionTelegram.botToken && sessionTelegram.chatId) {
       botToken = sessionTelegram.botToken;
-      chatId   = sessionTelegram.chatId;
-      toggle   = sessionTelegram.toggle;
+      chatId = sessionTelegram.chatId;
+      toggle = sessionTelegram.toggle;
     } else {
       console.warn("No Telegram credentials found (neither saved nor in session).");
       return;
@@ -229,8 +228,18 @@ function sendTelegramMessage(task) {
     return;
   }
 
-  const dueTimeStr = new Date(task.dueTime).toLocaleString();
-  const messageText = `Hi!, ${task.name} (Due: ${dueTimeStr})`;
+  let messageText;
+  if (Array.isArray(tasks)) {
+    if (tasks.length === 0) return; // Do not send message if no tasks
+    const taskList = tasks.map(t => `- ${t.name} (Due: ${new Date(t.dueTime).toLocaleString()})`).join('\n');
+    if (tasks.length === 1) {
+      const dueTimeStr = new Date(tasks[0].dueTime).toLocaleString();
+      messageText = `Hi!, ${tasks[0].name} (Due: ${dueTimeStr})`;
+    } else {
+      messageText = `Hi! You have overdue tasks:\n${taskList} \n Task to finish: ${tasks.length}`;
+    }
+  }
+
   const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(messageText)}`;
 
   fetch(url)
@@ -247,11 +256,11 @@ function sendTelegramMessage(task) {
 
 // Check for overdue tasks and trigger the alarm and Telegram message if needed
 function checkOverdueTasks() {
-  // // console.log("checkOverdueTasks called at", new Date().toLocaleTimeString());
+  // console.log("checkOverdueTasks called at", new Date().toLocaleTimeString());
   const tasks = getTasks();
   const now = new Date();
   let shouldPlayAlarm = false;
-  let messageSentThisCheck = false;
+  const overdueTasks = [];
 
   tasks.forEach(task => {
     const taskDue = new Date(task.dueTime);
@@ -264,20 +273,17 @@ function checkOverdueTasks() {
       if (!task.alarmTriggered) {
         // console.log(`Alarm not yet triggered for "${task.name}". Triggering now.`);
         task.alarmTriggered = true;
-        sendTelegramMessage(task);
-        messageSentThisCheck = true;
-      } else {
-        // console.log(`Alarm already triggered for "${task.name}". Not sending another Telegram message immediately.`);
       }
+      overdueTasks.push(task);
       shouldPlayAlarm = true;
     }
   });
 
-  if (messageSentThisCheck || tasks.some(t => t.alarmTriggered && !t.checked)) {
+  if (overdueTasks.length > 0) {
+    sendTelegramMessage(overdueTasks);
     saveTasks(tasks);
-    renderTasks(); //
+    renderTasks();
   }
-
 
   if (shouldPlayAlarm) {
     const alarmSound = document.getElementById('alarm-sound');
@@ -404,10 +410,10 @@ renderTasks();
 // Select elements
 const container = document.querySelector('.telegram-container');
 const inputs = container.querySelectorAll('.inputs input');
-const useButton    = container.querySelector('.buttons .use');
+const useButton = container.querySelector('.buttons .use');
 const saveButton = container.querySelector('.buttons .save');
 const toggleButton = container.querySelector('.buttons .off');
-const clearButton = container.querySelector('.buttons .clear');
+const clearButton = document.querySelector('.buttons .clear');
 
 inputs[0].type = "password";
 inputs[1].type = "password";
@@ -422,7 +428,6 @@ function updateUseButtonClasses() {
     useButton.classList.remove("addButton");
   }
 }
-
 
 // Function to update toggle button classes
 function updateToggleButtonClasses() {
@@ -477,15 +482,13 @@ function saveState() {
   localStorage.setItem("telegramDidITakeIt", JSON.stringify({ value1, value2, toggle }));
 }
 
-// Function to save stat ON OFF to localStorage
+// Function to save state ON OFF to localStorage
 function saveStateONOFF() {
   const savedState = localStorage.getItem("telegramDidITakeIt");
-  // declare and default
   let value1 = "";
   let value2 = "";
 
   if (savedState) {
-    // only overwrite if we actually have a saved blob
     const parsed = JSON.parse(savedState);
     value1 = parsed.value1 || "";
     value2 = parsed.value2 || "";
@@ -497,7 +500,6 @@ function saveStateONOFF() {
       JSON.stringify({ value1, value2, toggle })
   );
 }
-
 
 // Load initial state
 loadState();
@@ -534,8 +536,8 @@ useButton.addEventListener('click', () => {
 
   if (isUsing) {
     sessionTelegram.botToken = inputs[0].value;
-    sessionTelegram.chatId   = inputs[1].value;
-    sessionTelegram.toggle   = toggleButton.textContent;
+    sessionTelegram.chatId = inputs[1].value;
+    sessionTelegram.toggle = toggleButton.textContent;
 
     inputs[0].disabled = true;
     inputs[1].disabled = true;
@@ -550,14 +552,12 @@ useButton.addEventListener('click', () => {
   updateUseButtonClasses();
 });
 
-
 // Event listener for toggle button
 toggleButton.addEventListener('click', () => {
   toggleButton.textContent = toggleButton.textContent === "ON" ? "OFF" : "ON";
   updateToggleButtonClasses();
   saveStateONOFF();
 });
-
 
 clearButton.addEventListener('click', () => {
   localStorage.removeItem("telegramDidITakeIt");
