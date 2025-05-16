@@ -230,7 +230,7 @@ function sendTelegramMessage(task) {
   }
 
   const dueTimeStr = new Date(task.dueTime).toLocaleString();
-  const messageText = `Hi! there is overdue Task: ${task.name} (Due: ${dueTimeStr})`;
+  const messageText = `Hi!, ${task.name} (Due: ${dueTimeStr})`;
   const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(messageText)}`;
 
   fetch(url)
