@@ -14,6 +14,7 @@ li {
     margin-bottom: 10px;
 }
 
+.popoverButton,
 .addButton,
 .deleteButton,
 .editButton {
@@ -24,6 +25,7 @@ li {
     cursor: pointer;
 }
 
+.popoverButton,
 .addButton {
     background: #4CAF50;
     color: #fff;
@@ -34,6 +36,7 @@ li {
     color: #fff;
 }
 
+.popoverButton:hover,
 .addButton:hover {
     background: #45a049;
 }
