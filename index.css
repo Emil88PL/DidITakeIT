@@ -282,3 +282,11 @@ button {
         margin-bottom: 50px;
     }
 }
+
+label {
+    cursor: pointer;
+}
+
+label:hover {
+    background-color: rgba(157, 169, 227, 0.04);
+}
