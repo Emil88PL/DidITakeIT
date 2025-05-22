@@ -290,3 +290,10 @@ label {
 label:hover {
     background-color: rgba(157, 169, 227, 0.04);
 }
+
+.noSelect {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
