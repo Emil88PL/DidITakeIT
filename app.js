@@ -136,10 +136,12 @@ function renderTasks() {
     li.innerHTML = `
       <div class="container">
         <div>
-          <input type="checkbox" ${task.checked ? 'checked' : ''} onchange="toggleTask('${task.id}', this.checked)">
+          <input type="checkbox" id="task-${task.id}" ${task.checked ? 'checked' : ''} onchange="toggleTask('${task.id}', this.checked)">
         </div>
         <div>
-          <span>${task.name} (Due: ${new Date(task.dueTime).toLocaleTimeString()})</span>
+          <label for="task-${task.id}">
+            <span>${task.name} (Due: ${new Date(task.dueTime).toLocaleTimeString()})</span>
+          </label>
         </div>
         <div>
           <button onclick="deleteTask('${task.id}')" class="deleteButton">Delete</button>
