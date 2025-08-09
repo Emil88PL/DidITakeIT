@@ -566,3 +566,88 @@ clearButton.addEventListener('click', () => {
   sessionTelegram = { botToken: null, chatId: null, toggle: "OFF" };
   loadState();
 });
+
+class TaskBridge {
+  constructor() {
+    this.serverPort = 3456; // Fixed port for communication
+    this.isServerRunning = false;
+    this.checkInterval = null;
+    this.lastSentTasksJson = '';
+    this.lastSendTime = 0;
+    this.startServer();
+  }
+
+  async startServer() {
+    try {
+      const response = await fetch(`http://localhost:${this.serverPort}/ping`);
+      if (response.ok) {
+        this.isServerRunning = true;
+        this.startSendingTasks();
+        console.log('Desktop buddy server detected!');
+      }
+    } catch (error) {
+      console.log('Desktop buddy not running, will retry...');
+    }
+
+    // Retry detection every 50 seconds if server is offline
+    this.checkInterval = setInterval(() => {
+      if (!this.isServerRunning) {
+        this.startServer();
+      }
+    }, 50000);
+  }
+
+  async sendTasks(force = false) {
+    if (!this.isServerRunning) return;
+
+    const now = Date.now();
+    const tasksJson = JSON.stringify(getTasks());
+
+    // Avoid sending if data is identical and sent recently
+    if (!force && tasksJson === this.lastSentTasksJson && now - this.lastSendTime < 5000) {
+      return;
+    }
+
+    this.lastSentTasksJson = tasksJson;
+    this.lastSendTime = now;
+
+    try {
+      await fetch(`http://localhost:${this.serverPort}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: tasksJson
+      });
+    } catch (error) {
+      console.log('Failed to send tasks to desktop buddy');
+      this.isServerRunning = false;
+    }
+  }
+
+  startSendingTasks() {
+    // Send immediately when connected
+    this.sendTasks(true);
+
+    // Periodic send for overdue checks
+    setInterval(() => {
+      this.sendTasks();
+    }, 30000);
+
+    // Send whenever tasks are saved (checkbox clicked, etc.)
+    const originalSaveTasks = window.saveTasks;
+    window.saveTasks = (tasks) => {
+      originalSaveTasks(tasks);
+      this.sendTasks(true); // force send immediately
+    };
+
+    // Detect tab focus (switching back to buddy) & send overdue status instantly
+    window.addEventListener('focus', () => {
+      this.sendTasks(true);
+    });
+  }
+}
+
+// Initialize bridge on page load
+document.addEventListener('DOMContentLoaded', () => {
+  new TaskBridge();
+});
+
