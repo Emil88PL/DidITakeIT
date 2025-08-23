@@ -723,7 +723,9 @@ soundButton.addEventListener('click', () => {
 });
 
 function updateSoundButton() {
-  if (isMuted) {
+  const effectiveMute = isMuted || alarmElement.volume === 0;
+
+  if (effectiveMute) {
     soundButton.textContent = "Sound OFF";
     soundButton.dataset.tooltip = "Volume OFF";
     soundButton.classList.add("deleteButton");
@@ -777,3 +779,22 @@ function updateAlarmSource(type) {
   if (!alarmElement) return;
   alarmElement.src = type + ".mp3";
 }
+
+// --- Volume Control ---
+const volumeControl = document.getElementById("volume-control");
+
+// Load saved volume or default to 1 (full)
+let savedVolume = parseFloat(localStorage.getItem("alarmVolume"));
+if (isNaN(savedVolume)) savedVolume = 1;
+
+alarmElement.volume = savedVolume;
+volumeControl.value = savedVolume;
+
+volumeControl.addEventListener("input", () => {
+  const newVolume = parseFloat(volumeControl.value);
+  alarmElement.volume = newVolume;
+  localStorage.setItem("alarmVolume", newVolume);
+
+  updateSoundButton(); // keep button UI synced
+});
+
