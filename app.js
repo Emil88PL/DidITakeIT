@@ -803,3 +803,15 @@ volumeControl.addEventListener("input", () => {
   updateSoundButton(); // keep mute button synced
 });
 
+// --- Preview sound button ---
+const playSoundButton = document.getElementById("play-sound");
+
+playSoundButton.addEventListener("click", () => {
+  if (!isMuted && alarmElement) {
+    alarmElement.pause();
+    alarmElement.currentTime = 0;
+    alarmElement.play().catch(err => console.warn("Playback prevented:", err));
+  } else if (isMuted) {
+    console.log("Sound is muted, cannot preview.");
+  }
+});
