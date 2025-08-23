@@ -131,6 +131,7 @@ ul, ol {
     background-color: #006494;
 }
 
+.dropdown,
 form#task-form input, #check-frequency {
     border-radius: 3px;
     border: none;
@@ -296,4 +297,16 @@ label:hover {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+.settings-popover {
+    padding: 20px;
+}
+
+.settings-button {
+    display: flex;
+}
+
+.dropdown {
+    margin-top: 10px;
 }

@@ -40,13 +40,24 @@
     <ul id="task-list"></ul>
 
     <div>
-        <label for="check-frequency">Check Frequency:</label>
+        <button popovertarget="my-popover-settings" class="addButton custom-tooltip" data-tooltip="Settings">Settings</button>
+    </div>
+
+    <div popover id="my-popover-settings" class="settings-popover">
+        <label for="check-frequency">Checking Frequency:</label>
         <select id="check-frequency">
             <option value="1">1 min</option>
             <option value="3">3 min</option>
             <option value="5">5 min</option>
             <option value="7">7 min</option>
             <option value="10">10 min</option>
+        </select>
+        <button class="addButton custom-tooltip settings-button" data-tooltip="Volume ON">Sound ON</button>
+        <button class="addButton custom-tooltip settings-button" data-tooltip="Reset connection to Task Buddy">Reset Task Buddy connection</button>
+        <label for="ring-sound">Ring-sound:</label>
+        <select id="ring-sound" class="dropdown">
+            <option value="alarm">Half-Life</option>
+            <option value="bell">bell</option>
         </select>
     </div>
 
