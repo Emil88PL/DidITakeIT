@@ -288,14 +288,7 @@ function checkOverdueTasks() {
   }
 
   if (shouldPlayAlarm) {
-    const alarmSound = document.getElementById('alarm-sound');
-    if (alarmSound) { // Check if element exists
-      alarmSound.pause();
-      alarmSound.currentTime = 0;
-      alarmSound.play().catch(err => console.warn("Alarm playback prevented:", err));
-    } else {
-      console.warn("Alarm sound element not found!");
-    }
+    playAlarmSound();
   }
 }
 
@@ -712,4 +705,70 @@ if ('gc' in window) {
       window.gc();
     }
   }, 300000); // Every 5 minutes
+}
+
+// --- Sound ON/OFF toggle ---
+const soundButton = document.querySelector('#my-popover-settings .settings-button[data-tooltip="Volume ON"]');
+const alarmElement = document.getElementById('alarm-sound');
+
+// Load initial mute state
+let isMuted = localStorage.getItem("soundMuted") === "true";
+updateSoundButton();
+
+soundButton.addEventListener('click', () => {
+  isMuted = !isMuted;
+  localStorage.setItem("soundMuted", isMuted);
+  updateSoundButton();
+});
+
+function updateSoundButton() {
+  if (isMuted) {
+    soundButton.textContent = "Sound OFF";
+    soundButton.dataset.tooltip = "Volume OFF";
+  } else {
+    soundButton.textContent = "Sound ON";
+    soundButton.dataset.tooltip = "Volume ON";
+  }
+}
+
+// Override alarm play with mute check
+function playAlarmSound() {
+  if (isMuted) return;
+  const alarmSound = document.getElementById('alarm-sound');
+  if (alarmSound) {
+    alarmSound.pause();
+    alarmSound.currentTime = 0;
+    alarmSound.play().catch(err => console.warn("Alarm playback prevented:", err));
+  }
+}
+
+// --- Reset Task Buddy button ---
+const resetButton = document.querySelector('#my-popover-settings .settings-button[data-tooltip="Reset connection to Task Buddy"]');
+resetButton.addEventListener('click', () => {
+  if (taskBridge) {
+    taskBridge.destroy();
+    taskBridge = new TaskBridge();
+    console.log("Task Buddy connection reset.");
+  }
+});
+
+// --- Ring sound selection ---
+const ringSoundSelect = document.getElementById("ring-sound");
+
+// Load saved ring sound from localStorage
+const savedRingSound = localStorage.getItem("ringSound");
+if (savedRingSound) {
+  ringSoundSelect.value = savedRingSound;
+  updateAlarmSource(savedRingSound);
+}
+
+ringSoundSelect.addEventListener("change", () => {
+  const selected = ringSoundSelect.value;
+  localStorage.setItem("ringSound", selected);
+  updateAlarmSource(selected);
+});
+
+function updateAlarmSource(type) {
+  if (!alarmElement) return;
+  alarmElement.src = type + ".mp3";
 }
