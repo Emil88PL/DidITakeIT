@@ -725,8 +725,10 @@ function updateSoundButton() {
   if (isMuted) {
     soundButton.textContent = "Sound OFF";
     soundButton.dataset.tooltip = "Volume OFF";
+    soundButton.classList.add("deleteButton");
   } else {
     soundButton.textContent = "Sound ON";
+    soundButton.classList.remove("deleteButton");
     soundButton.dataset.tooltip = "Volume ON";
   }
 }
