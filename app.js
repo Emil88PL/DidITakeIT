@@ -782,6 +782,7 @@ function updateAlarmSource(type) {
 
 // --- Volume Control ---
 const volumeControl = document.getElementById("volume-control");
+const volumePercent = document.getElementById("volume-percent");
 
 // Load saved volume or default to 1 (full)
 let savedVolume = parseFloat(localStorage.getItem("alarmVolume"));
@@ -789,12 +790,16 @@ if (isNaN(savedVolume)) savedVolume = 1;
 
 alarmElement.volume = savedVolume;
 volumeControl.value = savedVolume;
+volumePercent.textContent = Math.round(savedVolume * 100) + "%";
 
 volumeControl.addEventListener("input", () => {
   const newVolume = parseFloat(volumeControl.value);
   alarmElement.volume = newVolume;
   localStorage.setItem("alarmVolume", newVolume);
 
-  updateSoundButton(); // keep button UI synced
+  // Update percentage display
+  volumePercent.textContent = Math.round(newVolume * 100) + "%";
+
+  updateSoundButton(); // keep mute button synced
 });
 

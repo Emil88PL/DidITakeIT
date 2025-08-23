@@ -326,3 +326,7 @@ label:hover {
     border-left: 15px solid transparent; /* width of the triangle */
     border-radius: 0 10px 0 0;
 }
+
+.volume {
+    font-size: 0.8rem;
+}
