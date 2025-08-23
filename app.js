@@ -710,6 +710,7 @@ if ('gc' in window) {
 // --- Sound ON/OFF toggle ---
 const soundButton = document.querySelector('#my-popover-settings .settings-button[data-tooltip="Volume ON"]');
 const alarmElement = document.getElementById('alarm-sound');
+const showSettingsButton  = document.querySelector('#show-settings-button');
 
 // Load initial mute state
 let isMuted = localStorage.getItem("soundMuted") === "true";
@@ -726,9 +727,11 @@ function updateSoundButton() {
     soundButton.textContent = "Sound OFF";
     soundButton.dataset.tooltip = "Volume OFF";
     soundButton.classList.add("deleteButton");
+    showSettingsButton.classList.add("redCorner");
   } else {
     soundButton.textContent = "Sound ON";
     soundButton.classList.remove("deleteButton");
+    showSettingsButton.classList.remove("redCorner");
     soundButton.dataset.tooltip = "Volume ON";
   }
 }

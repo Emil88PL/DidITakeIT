@@ -310,3 +310,19 @@ label:hover {
 .dropdown {
     margin-top: 10px;
 }
+
+#show-settings-button {
+    position: relative;
+}
+
+.redCorner::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-top: 15px solid #ed0303; /* height of the triangle */
+    border-left: 15px solid transparent; /* width of the triangle */
+    border-radius: 0 10px 0 0;
+}
