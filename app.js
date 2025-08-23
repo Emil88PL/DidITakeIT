@@ -750,7 +750,7 @@ function playAlarmSound() {
 }
 
 // --- Reset Task Buddy button ---
-const resetButton = document.querySelector('#my-popover-settings .settings-button[data-tooltip="Reset connection to Task Buddy"]');
+const resetButton = document.querySelector('#my-popover-settings .settings-button[data-tooltip="Link to download Task Buddy on bottom right (i)"]');
 resetButton.addEventListener('click', () => {
   if (taskBridge) {
     taskBridge.destroy();
