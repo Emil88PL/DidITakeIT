@@ -208,17 +208,14 @@ function editTask(id) {
 
 // Function to send Telegram message for overdue tasks
 function sendTelegramMessage(tasks) {
-  // Try persisted creds only if both token & chatId are non‑empty
   let raw = localStorage.getItem("telegramDidITakeIt");
-  let botToken, chatId, toggle;
-
+  let botToken, chatId, toggle, chatName;
   if (raw) {
     const parsed = JSON.parse(raw);
-    if (parsed.value1 && parsed.value2) {
-      botToken = parsed.value1;
-      chatId = parsed.value2;
-      toggle = parsed.toggle;
-    }
+    botToken = parsed.value1;
+    chatId = parsed.value2;
+    toggle = parsed.toggle;
+    chatName = parsed.chatName || 'there';
   }
 
   // If persisted were empty, fall back to session creds
@@ -227,6 +224,7 @@ function sendTelegramMessage(tasks) {
       botToken = sessionTelegram.botToken;
       chatId = sessionTelegram.chatId;
       toggle = sessionTelegram.toggle;
+      chatName = loadChatName() || 'there';
     } else {
       console.warn("No Telegram credentials found (neither saved nor in session).");
       return;
@@ -240,13 +238,13 @@ function sendTelegramMessage(tasks) {
 
   let messageText;
   if (Array.isArray(tasks)) {
-    if (tasks.length === 0) return; // Do not send message if no tasks
+    if (tasks.length === 0) return;
     const taskList = tasks.map(t => `- ${t.name} (Due: ${new Date(t.dueTime).toLocaleString()})`).join('\n');
     if (tasks.length === 1) {
       const dueTimeStr = new Date(tasks[0].dueTime).toLocaleString();
-      messageText = `Hi!, ${tasks[0].name} (Due: ${dueTimeStr})`;
+      messageText = `Hi ${chatName}!, ${tasks[0].name} (Due: ${dueTimeStr})`;
     } else {
-      messageText = `Hi! You have overdue tasks:\n${taskList} \n Task to finish: ${tasks.length}`;
+      messageText = `Hi ${chatName}! You have overdue tasks:\n${taskList} \n Task to finish: ${tasks.length}`;
     }
   }
 
@@ -458,18 +456,22 @@ function updateSaveButtonClasses() {
 function loadState() {
   const savedState = localStorage.getItem("telegramDidITakeIt");
   if (savedState) {
-    const { value1, value2, toggle } = JSON.parse(savedState);
-    inputs[0].value = value1;
-    inputs[1].value = value2;
-    toggleButton.textContent = toggle;
+    const { value1, value2, toggle, chatName } = JSON.parse(savedState);
+    inputs[0].value = value1 || '';
+    inputs[1].value = value2 || '';
+    inputs[2].value = chatName || '';
+    toggleButton.textContent = toggle || "OFF";
     inputs[0].disabled = true;
     inputs[1].disabled = true;
+    inputs[2].disabled = true;
     saveButton.textContent = "Update";
   } else {
     toggleButton.textContent = "OFF";
     saveButton.textContent = "Save";
     inputs[0].disabled = false;
     inputs[1].disabled = false;
+    inputs[2].disabled = false;
+    inputs[2].value = '';
   }
   useButton.textContent = "Update";
   updateToggleButtonClasses();
@@ -482,26 +484,17 @@ function saveState() {
   const value1 = inputs[0].value;
   const value2 = inputs[1].value;
   const toggle = toggleButton.textContent;
-  localStorage.setItem("telegramDidITakeIt", JSON.stringify({ value1, value2, toggle }));
+  const chatNameInput = document.querySelector('input[placeholder="Chat Name"]');
+  const chatName = chatNameInput ? chatNameInput.value : '';
+  localStorage.setItem("telegramDidITakeIt", JSON.stringify({ value1, value2, toggle, chatName }));
 }
 
 // Function to save state ON OFF to localStorage
 function saveStateONOFF() {
   const savedState = localStorage.getItem("telegramDidITakeIt");
-  let value1 = "";
-  let value2 = "";
-
-  if (savedState) {
-    const parsed = JSON.parse(savedState);
-    value1 = parsed.value1 || "";
-    value2 = parsed.value2 || "";
-  }
-
-  const toggle = toggleButton.textContent;
-  localStorage.setItem(
-      "telegramDidITakeIt",
-      JSON.stringify({ value1, value2, toggle })
-  );
+  let state = savedState ? JSON.parse(savedState) : {};
+  state.toggle = toggleButton.textContent;
+  localStorage.setItem("telegramDidITakeIt", JSON.stringify(state));
 }
 
 // Load initial state
@@ -519,15 +512,19 @@ saveButton.addEventListener('click', () => {
     saveState();
     inputs[0].disabled = true;
     inputs[1].disabled = true;
+    inputs[2].disabled = true;
     saveButton.textContent = "Update";
     inputs[0].type = "password";
     inputs[1].type = "password";
+    inputs[2].type = "text";
   } else {
     inputs[0].disabled = false;
     inputs[1].disabled = false;
+    inputs[2].disabled = false;
     saveButton.textContent = "Save";
-    inputs[0].type = "text";
-    inputs[1].type = "text";
+    inputs[0].type = "password";
+    inputs[1].type = "password";
+    inputs[2].type = "text";
   }
 
   updateSaveButtonClasses();
@@ -544,10 +541,12 @@ useButton.addEventListener('click', () => {
 
     inputs[0].disabled = true;
     inputs[1].disabled = true;
+    inputs[2].disabled = true;
     useButton.textContent = "Update";
   } else {
     inputs[0].disabled = false;
     inputs[1].disabled = false;
+    inputs[2].disabled = false;
     useButton.textContent = "Use";
   }
 
