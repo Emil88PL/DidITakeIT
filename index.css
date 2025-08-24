@@ -357,7 +357,7 @@ label:hover {
 
 .status-text {
     opacity: 0;
-    transform: translateX(5px);
+    transform: translateY(6px);
     transition: opacity 0.3s ease, transform 0.3s ease;
     white-space: nowrap;
     color: #333;
