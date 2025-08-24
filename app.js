@@ -487,7 +487,6 @@ function loadState() {
     inputs[1].disabled = false;
     inputs[2].disabled = false;
     inputs[2].value = '';
-    inputs[2].style.display = "block";
   }
 
   useButton.textContent = "Update";

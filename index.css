@@ -397,3 +397,7 @@ input[type="range"] {
     opacity: 1;
     transform: translateX(0);
 }
+
+.chatName {
+    display: none;
+}
