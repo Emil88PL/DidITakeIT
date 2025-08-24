@@ -127,6 +127,14 @@ const presetTasks = {
     { time: "19:00", name: "Screen-free time" },
     { time: "21:00", name: "Evening reflection" },
     { time: "22:00", name: "Sleep preparation routine" }
+  ],
+
+  work: [
+    { time: "10:00", name: "Eye's break" },
+    { time: "12:30", name: "OTL" },
+    { time: "13:00", name: "Break" },
+    { time: "15:30", name: "Eye's break" },
+    { time: "17:30", name: "Take that walk!" },
   ]
 };
 
