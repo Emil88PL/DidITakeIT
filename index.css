@@ -300,7 +300,22 @@ label:hover {
 }
 
 .settings-popover {
+    position: relative;
     padding: 20px 60px;
+    overflow: visible;
+}
+
+.popover-label {
+    position: absolute;
+    top: -9px;
+    left: 20px;
+    background: #00b9fe;
+    padding: 0 10px;
+    font-weight: bold;
+    font-size: 14px;
+    z-index: 100;
+    border-radius: 5px;
+    line-height: 1;
 }
 
 .settings-button {
