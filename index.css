@@ -364,7 +364,7 @@ label:hover {
     font-size: 0.9em;
     position: absolute;
     bottom: 30px;
-    right: -40px;
+    left: -40px;
 }
 
 .status-indicator:hover .status-text {
