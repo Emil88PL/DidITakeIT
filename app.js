@@ -473,6 +473,13 @@ function loadState() {
     inputs[1].disabled = true;
     inputs[2].disabled = true;
     saveButton.textContent = "Update";
+
+    // Hide chatName input if empty
+    if (!chatName) {
+      inputs[2].style.display = "none";
+    } else {
+      inputs[2].style.display = "block";
+    }
   } else {
     toggleButton.textContent = "OFF";
     saveButton.textContent = "Save";
@@ -480,7 +487,9 @@ function loadState() {
     inputs[1].disabled = false;
     inputs[2].disabled = false;
     inputs[2].value = '';
+    inputs[2].style.display = "block";
   }
+
   useButton.textContent = "Update";
   updateToggleButtonClasses();
   updateSaveButtonClasses();
@@ -528,6 +537,7 @@ saveButton.addEventListener('click', () => {
   } else {
     inputs[0].disabled = false;
     inputs[1].disabled = false;
+    inputs[2].style.display = "block";
     inputs[2].disabled = false;
     saveButton.textContent = "Save";
     inputs[0].type = "password";
