@@ -2,6 +2,14 @@
 let overdueInterval;
 let dueTimeInterval;
 
+// Connection status
+const dot = document.getElementById('statusDot');
+const text = document.getElementById('statusText');
+
+// Connection colour
+const vividSkyBlue = "#00b9fe";
+const greenPrimary = "#4CAF50";
+
 // Session (in-memory) credentials when user clicks “Use”
 let sessionTelegram = { botToken: null, chatId: null, toggle: "OFF" };
 
@@ -582,11 +590,15 @@ class TaskBridge {
         this.isServerRunning = true;
         this.startSendingTasks();
         console.log('Desktop buddy server detected!');
+        dot.style.backgroundColor = greenPrimary;
+        text.textContent = 'Connected';
         return;
       }
     } catch (error) {
       // Keep logging but ensure error objects don't accumulate
       console.log('Desktop buddy not running, will retry...');
+      dot.style.backgroundColor = vividSkyBlue;
+      text.textContent = 'Reconnecting...';
     }
 
     // CRITICAL FIX: Always clear existing interval before creating new one
@@ -628,6 +640,8 @@ class TaskBridge {
       });
     } catch (error) {
       console.log('Failed to send tasks to desktop buddy');
+      dot.style.backgroundColor = 'red';
+      text.textContent = 'Disconnected';
       this.isServerRunning = false;
     }
   }

@@ -330,3 +330,44 @@ label:hover {
 .volume {
     font-size: 0.8rem;
 }
+
+.connection-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.status-indicator {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: default;
+    bottom: 66px;
+    left: 266px;
+}
+
+.status-dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background-color: red;
+    transition: background-color 0.3s;
+}
+
+.status-text {
+    opacity: 0;
+    transform: translateX(5px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    white-space: nowrap;
+    color: #333;
+    font-size: 0.9em;
+    position: absolute;
+    bottom: 30px;
+    right: -40px;
+}
+
+.status-indicator:hover .status-text {
+    opacity: 1;
+    transform: translateX(0);
+}
