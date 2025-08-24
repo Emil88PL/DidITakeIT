@@ -327,6 +327,10 @@ label:hover {
     border-radius: 0 10px 0 0;
 }
 
+input[type="range"] {
+    vertical-align: middle;
+}
+
 .volume {
     font-size: 0.8rem;
 }
