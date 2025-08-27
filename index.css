@@ -355,6 +355,9 @@ input[type="range"] {
 
 .volume {
     font-size: 0.8rem;
+    min-width: 35px;
+    text-align: right;
+    display: inline-block;
 }
 
 .connection-wrapper {
