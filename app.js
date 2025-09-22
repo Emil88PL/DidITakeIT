@@ -135,6 +135,17 @@ const presetTasks = {
     { time: "13:00", name: "Break" },
     { time: "15:30", name: "Eye's break" },
     { time: "17:30", name: "Take that walk!" },
+  ],
+
+  work2: [
+    { time: "09:10", name: "Emails" },
+    { time: "10:30", name: "Coffee break" },
+    { time: "11:30", name: "20 20 20 rule" },
+    { time: "13:00", name: "Break" },
+    { time: "15:30", name: "Eye's break" },
+    { time: "16:30", name: "Update Kimble" },
+    { time: "17:00", name: "Drink Water" },
+    { time: "18:00", name: "Take that walk!" },
   ]
 };
 
