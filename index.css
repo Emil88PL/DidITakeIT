@@ -6,7 +6,7 @@ body {
     flex-direction: column;
     justify-content: flex-start; /* Pushes content higher */
     align-items: center;
-    height: 100vh; /* Keeps full background */
+    min-height: 100vh;
     margin: 0;
 }
 
@@ -205,8 +205,8 @@ form#task-form input, #check-frequency {
 }
 
 .telegram-container {
-    position: absolute;
-    bottom: 0;
+    position: static;
+    margin-top: auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
