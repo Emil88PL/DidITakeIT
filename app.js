@@ -187,7 +187,10 @@ function toggleTask(id, checked) {
   const task = tasks.find(t => t.id === id);
   if (task) {
     task.checked = checked;
-    if (checked) task.alarmTriggered = false;
+    if (checked) {
+      task.alarmTriggered = false;
+      document.title = `Did I take it?`;
+    }
     saveTasks(tasks);
     renderTasks();
   }
@@ -314,6 +317,9 @@ function checkOverdueTasks() {
 
   if (shouldPlayAlarm) {
     playAlarmSound();
+    document.title = `You have task to do!`;
+  } else {
+    document.title = `Did I take it?`;
   }
 }
 
