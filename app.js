@@ -330,6 +330,7 @@ function checkOverdueTasks() {
     // start blinking only if not already started
     if (!titleBlinkInterval) {
         blinkingTitle();
+      // marqueeTittle(); TODO
     }
   } else {
     // no overdue tasks — stop blinking
@@ -348,6 +349,17 @@ function blinkingTitle() {
     document.title = toggle ? "You have task to do!" : "⚠️ Let's do it! 🔴🔴🔴";
     toggle = !toggle;
   }, 1600);
+}
+
+// Marquee Title
+function marqueeTittle() {
+  let title = "Love you!";
+  let position = 0;
+
+  titleBlinkInterval = setInterval(() => {
+    document.title = title.substring(position) + title.substring(0, position);
+    position = (position + 1) % title.length;
+  }, 300);
 }
 
 // Reset all tasks at 4 AM (this checks every minute)
