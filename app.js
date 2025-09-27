@@ -158,7 +158,7 @@ function savePageTitleMode(mode) {
 }
 
 function loadPageTitleMode() {
-  return localStorage.getItem('pageTitleMode') || 'default';
+  return localStorage.getItem('pageTitleMode') || 'blinkingTitle';
 }
 
 // On page load, select the radio button saved in localStorage
@@ -387,7 +387,7 @@ function checkOverdueTasks() {
 function blinkingTitle() {
   let toggle = true;
   titleBlinkInterval = setInterval(() => {
-    document.title = toggle ? "You have task to do!" : "⚠️ Let's do it! 🔴🔴🔴";
+    document.title = toggle ? "You have task to do!" : "⚠️ Let's do it! 🔴🟡🟢";
     toggle = !toggle;
   }, 1600);
 }
@@ -396,7 +396,6 @@ function blinkingTitle() {
 function marqueeTittle() {
   const tasks = getTasks();
   const task = tasks.find((t) => !t.checked && t.alarmTriggered);
-  console.log(task.name);
   // stop if no unchecked tasks
   if (!task || !task.name) {
     if (titleBlinkInterval) {
