@@ -329,8 +329,8 @@ function checkOverdueTasks() {
     playAlarmSound();
     // start blinking only if not already started
     if (!titleBlinkInterval) {
-        blinkingTitle();
-      // marqueeTittle(); TODO
+        // blinkingTitle();
+      marqueeTittle();
     }
   } else {
     // no overdue tasks — stop blinking
@@ -353,11 +353,30 @@ function blinkingTitle() {
 
 // Marquee Title
 function marqueeTittle() {
-  let title = "Love you!";
+  const tasks = getTasks();
+  const task = tasks.find((t) => !t.checked && t.alarmTriggered);
+  console.log(task.name);
+  // stop if no unchecked tasks
+  if (!task || !task.name) {
+    if (titleBlinkInterval) {
+      clearInterval(titleBlinkInterval);
+      titleBlinkInterval = null;
+    }
+    document.title = `Did I take it?`;
+    return;
+  }
+
+  // stop existing interval before starting new one
+  if (titleBlinkInterval) {
+    clearInterval(titleBlinkInterval);
+    titleBlinkInterval = null;
+  }
+
+  let title = task.name;
   let position = 0;
 
   titleBlinkInterval = setInterval(() => {
-    document.title = title.substring(position) + title.substring(0, position);
+    document.title = title.substring(position) + " • " + title.substring(0, position);
     position = (position + 1) % title.length;
   }, 300);
 }
