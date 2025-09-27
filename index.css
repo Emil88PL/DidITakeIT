@@ -404,3 +404,7 @@ input[type="range"] {
 .chatName {
     display: none;
 }
+
+.page-tittle-settings-container input[type="radio"] {
+    margin-right: 6px;
+}
