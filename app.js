@@ -152,6 +152,41 @@ const presetTasks = {
   ]
 };
 
+// --- Page Title Mode ---
+function savePageTitleMode(mode) {
+  localStorage.setItem('pageTitleMode', mode);
+}
+
+function loadPageTitleMode() {
+  return localStorage.getItem('pageTitleMode') || 'default';
+}
+
+// On page load, select the radio button saved in localStorage
+document.addEventListener('DOMContentLoaded', () => {
+  const savedMode = loadPageTitleMode();
+  const radio = document.querySelector(`input[name="pageTitle"][value="${savedMode}"]`);
+  if (radio) {
+    radio.checked = true;
+  }
+});
+
+
+// Listen for changes to the radio buttons
+document.querySelectorAll('input[name="pageTitle"]').forEach(radio => {
+  radio.addEventListener('change', (e) => {
+    const selected = e.target.value;
+    savePageTitleMode(selected);
+
+    // Stop any active interval immediately if switching modes
+    if (titleBlinkInterval) {
+      clearInterval(titleBlinkInterval);
+      titleBlinkInterval = null;
+    }
+    document.title = `Did I take it?`;
+    checkOverdueTasks(); // immediately apply new mode
+  });
+});
+
 // Render the task list on the page
 function renderTasks() {
   const tasks = getTasks();
@@ -327,13 +362,19 @@ function checkOverdueTasks() {
 
   if (shouldPlayAlarm) {
     playAlarmSound();
-    // start blinking only if not already started
     if (!titleBlinkInterval) {
-        // blinkingTitle();
-      marqueeTittle();
+      const mode = loadPageTitleMode();
+      if (mode === 'marquee') {
+        marqueeTittle();
+      } else if (mode === 'blinkingTitle') {
+        blinkingTitle();
+      } else {
+        // default just sets normal title
+        document.title = 'Did I take it?';
+      }
     }
   } else {
-    // no overdue tasks — stop blinking
+    // no overdue tasks — stop blinking/marquee
     if (titleBlinkInterval) {
       clearInterval(titleBlinkInterval);
       titleBlinkInterval = null;
