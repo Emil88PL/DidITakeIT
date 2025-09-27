@@ -329,11 +329,7 @@ function checkOverdueTasks() {
     playAlarmSound();
     // start blinking only if not already started
     if (!titleBlinkInterval) {
-      let toggle = true;
-      titleBlinkInterval = setInterval(() => {
-        document.title = toggle ? "You have task to do!" : "⚠️ Let's do it! 🔴🔴🔴";
-        toggle = !toggle;
-      }, 1600);
+        blinkingTitle();
     }
   } else {
     // no overdue tasks — stop blinking
@@ -343,6 +339,15 @@ function checkOverdueTasks() {
     }
     document.title = `Did I take it?`;
   }
+}
+
+// Blinking title
+function blinkingTitle() {
+  let toggle = true;
+  titleBlinkInterval = setInterval(() => {
+    document.title = toggle ? "You have task to do!" : "⚠️ Let's do it! 🔴🔴🔴";
+    toggle = !toggle;
+  }, 1600);
 }
 
 // Reset all tasks at 4 AM (this checks every minute)
