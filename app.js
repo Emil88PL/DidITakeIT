@@ -2,6 +2,9 @@
 let overdueInterval;
 let dueTimeInterval;
 
+// Toggle for change document title
+let titleBlinkInterval = null;
+
 // Connection status
 const dot = document.getElementById('statusDot');
 const text = document.getElementById('statusText');
@@ -189,6 +192,13 @@ function toggleTask(id, checked) {
     task.checked = checked;
     if (checked) {
       task.alarmTriggered = false;
+
+      // 🔴 Stop blinking immediately when a task is completed
+      if (titleBlinkInterval) {
+        clearInterval(titleBlinkInterval);
+        titleBlinkInterval = null;
+      }
+
       document.title = `Did I take it?`;
     }
     saveTasks(tasks);
@@ -317,8 +327,20 @@ function checkOverdueTasks() {
 
   if (shouldPlayAlarm) {
     playAlarmSound();
-    document.title = `You have task to do!`;
+    // start blinking only if not already started
+    if (!titleBlinkInterval) {
+      let toggle = true;
+      titleBlinkInterval = setInterval(() => {
+        document.title = toggle ? "You have task to do!" : "⚠️ Let's do it! 🔴🔴🔴";
+        toggle = !toggle;
+      }, 1600);
+    }
   } else {
+    // no overdue tasks — stop blinking
+    if (titleBlinkInterval) {
+      clearInterval(titleBlinkInterval);
+      titleBlinkInterval = null;
+    }
     document.title = `Did I take it?`;
   }
 }
