@@ -258,7 +258,13 @@ function editTask(id) {
   // Prompt for new name; if Cancel is pressed, no change is made.
   const newName = prompt("Edit task name:", task.name);
   if (newName === null) return;
-  const currentDueTime = new Date(task.dueTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+  const currentDueTime = new Date(task.dueTime).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute:'2-digit',
+    hour12: false
+  });
+
   const newDueTime = prompt("Edit task due time (HH:MM):", currentDueTime);
   if (newDueTime === null) return;
   const today = new Date();
