@@ -849,6 +849,150 @@ window.addEventListener('beforeunload', () => {
   }
 });
 
+let taskBridgeTerminal = null;
+
+// Initialize bridge on page load
+document.addEventListener('DOMContentLoaded', () => {
+  // Clean up any existing instance first
+  if (taskBridgeTerminal) {
+    taskBridgeTerminal.destroy();
+  }
+  taskBridgeTerminal = new TaskBridgeTerminal();
+});
+
+// Clean up when page is unloaded
+window.addEventListener('beforeunload', () => {
+  if (taskBridgeTerminal) {
+    taskBridgeTerminal.destroy();
+  }
+});
+
+class TaskBridgeTerminal {
+  constructor() {
+    this.serverPort = 2137;
+    this.isServerRunning = false;
+    this.checkInterval = null;
+    this.sendInterval = null;
+    this.lastSentTasksJson = '';
+    this.lastSendTime = 0;
+    this.startServer();
+  }
+
+  async startServer() {
+    try {
+      const response = await fetch(`http://localhost:${this.serverPort}/ping`, {
+        // Add timeout and proper cleanup for fetch requests
+        signal: AbortSignal.timeout(5000), // 5 second timeout
+        cache: 'no-cache' // Prevent caching
+      });
+      if (response.ok) {
+        this.isServerRunning = true;
+        this.startSendingTasks();
+        console.log('Desktop buddy server detected!');
+        dot.style.backgroundColor = greenPrimary;
+        text.textContent = 'Connected';
+        return;
+      }
+    } catch (error) {
+      // Keep logging but ensure error objects don't accumulate
+      console.log('Desktop buddy not running, will retry...');
+      dot.style.backgroundColor = vividSkyBlue;
+      text.textContent = 'Reconnecting...';
+    }
+
+    // CRITICAL FIX: Always clear existing interval before creating new one
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
+
+    // Only create new interval if we don't already have one running
+    if (!this.isServerRunning && !this.checkInterval) {
+      this.checkInterval = setInterval(() => {
+        this.startServer();
+      }, 50000);
+    }
+  }
+
+  async sendTasks(force = false) {
+    if (!this.isServerRunning) return;
+
+    const now = Date.now();
+    const tasksJson = JSON.stringify(getTasks());
+
+    // Avoid sending if data is identical and sent recently
+    if (!force && tasksJson === this.lastSentTasksJson && now - this.lastSendTime < 5000) {
+      return;
+    }
+
+    this.lastSentTasksJson = tasksJson;
+    this.lastSendTime = now;
+
+    try {
+      await fetch(`http://localhost:${this.serverPort}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: tasksJson,
+        // Add timeout to prevent hanging requests
+        signal: AbortSignal.timeout(5000),
+        cache: 'no-cache'
+      });
+    } catch (error) {
+      console.log('Failed to send tasks to desktop buddy');
+      dot.style.backgroundColor = 'red';
+      text.textContent = 'Disconnected';
+      this.isServerRunning = false;
+    }
+  }
+
+  startSendingTasks() {
+    // Send immediately when connected
+    this.sendTasks(true);
+
+    // CRITICAL FIX: Clear existing interval before creating new one
+    if (this.sendInterval) {
+      clearInterval(this.sendInterval);
+      this.sendInterval = null;
+    }
+
+    // Periodic send for overdue checks
+    this.sendInterval = setInterval(() => {
+      this.sendTasks();
+    }, 30000);
+
+    // CRITICAL FIX: Only add event listeners once to prevent duplicates
+    if (!this.eventListenersAdded) {
+      // Send whenever tasks are saved (checkbox clicked, etc.)
+      const originalSaveTasks = window.saveTasks;
+      window.saveTasks = (tasks) => {
+        originalSaveTasks(tasks);
+        this.sendTasks(true); // force send immediately
+      };
+
+      // Detect tab focus (switching back to buddy) & send overdue status instantly
+      window.addEventListener('focus', () => {
+        this.sendTasks(true);
+      });
+
+      this.eventListenersAdded = true;
+    }
+  }
+
+  // Method to clean up intervals when needed
+  destroy() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
+    if (this.sendInterval) {
+      clearInterval(this.sendInterval);
+      this.sendInterval = null;
+    }
+    this.isServerRunning = false;
+  }
+}
+
+
 // BONUS: Add periodic garbage collection hint for browsers that support it
 if ('gc' in window) {
   setInterval(() => {
@@ -906,6 +1050,17 @@ resetButton.addEventListener('click', () => {
   if (taskBridge) {
     taskBridge.destroy();
     taskBridge = new TaskBridge();
+    console.log("Task Buddy connection reset.");
+  }
+});
+
+// --- Reset Buddy Terminal button ---
+const resetButtonTerminal = document.querySelector('#my-popover-settings .settings-button[data-tooltip="Buddy Terminal"]');
+resetButtonTerminal.addEventListener('click', () => {
+  console.log("Buddy Terminal reset.");
+  if (taskBridgeTerminal) {
+    taskBridgeTerminal.destroy();
+    taskBridgeTerminal = new TaskBridgeTerminal();
     console.log("Task Buddy connection reset.");
   }
 });
