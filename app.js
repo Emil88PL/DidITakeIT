@@ -996,6 +996,43 @@ class TaskBridgeTerminal {
   }
 }
 
+// Store the interval ID so we can clear it later
+let terminalSyncInterval = null;
+
+// Listen for task updates from terminal
+terminalSyncInterval = setInterval(async () => {
+  try {
+    const response = await fetch('http://localhost:2137/tasks', {
+      signal: AbortSignal.timeout(5000),
+      cache: 'no-cache'
+    });
+
+    if (response.ok) {
+      const serverTasks = await response.json();
+      if (serverTasks && serverTasks.length > 0) {
+        const currentTasks = getTasks();
+
+        // Only update if data has actually changed
+        if (JSON.stringify(currentTasks) !== JSON.stringify(serverTasks)) {
+          saveTasks(serverTasks);
+          renderTasks();
+        }
+      }
+    }
+  } catch (error) {
+    // Silently fail if server not running
+  }
+}, 2000); // Check every 2 seconds
+
+// Clean up when page is unloaded
+window.addEventListener('beforeunload', () => {
+  if (terminalSyncInterval) {
+    clearInterval(terminalSyncInterval);
+    terminalSyncInterval = null;
+  }
+});
+
+
 
 // BONUS: Add periodic garbage collection hint for browsers that support it
 if ('gc' in window) {
