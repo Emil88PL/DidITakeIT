@@ -9,6 +9,10 @@ let titleBlinkInterval = null;
 const dot = document.getElementById('statusDot');
 const text = document.getElementById('statusText');
 
+// Connection status Terminal
+const dotTerminal = document.getElementById('statusDotTerminal');
+const textTerminal = document.getElementById('statusTextTerminal');
+
 // Connection colour
 const vividSkyBlue = "#00b9fe";
 const greenPrimary = "#4CAF50";
@@ -889,15 +893,15 @@ class TaskBridgeTerminal {
         this.isServerRunning = true;
         this.startSendingTasks();
         console.log('Terminal buddy server detected!');
-        dot.style.backgroundColor = greenPrimary;
-        text.textContent = 'Connected';
+        dotTerminal.style.backgroundColor = greenPrimary;
+        textTerminal.textContent = 'Connected';
         return;
       }
     } catch (error) {
       // Keep logging but ensure error objects don't accumulate
       console.log('Terminal buddy not running, will retry...');
-      dot.style.backgroundColor = vividSkyBlue;
-      text.textContent = 'Reconnecting...';
+      dotTerminal.style.backgroundColor = vividSkyBlue;
+      textTerminal.textContent = 'Reconnecting...';
     }
 
     // CRITICAL FIX: Always clear existing interval before creating new one
@@ -939,8 +943,8 @@ class TaskBridgeTerminal {
       });
     } catch (error) {
       console.log('Failed to send tasks to Terminal buddy');
-      dot.style.backgroundColor = 'red';
-      text.textContent = 'Disconnected';
+      dotTerminal.style.backgroundColor = 'red';
+      textTerminal.textContent = 'Disconnected';
       this.isServerRunning = false;
     }
   }
