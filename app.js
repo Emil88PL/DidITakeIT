@@ -888,14 +888,14 @@ class TaskBridgeTerminal {
       if (response.ok) {
         this.isServerRunning = true;
         this.startSendingTasks();
-        console.log('Desktop buddy server detected!');
+        console.log('Terminal buddy server detected!');
         dot.style.backgroundColor = greenPrimary;
         text.textContent = 'Connected';
         return;
       }
     } catch (error) {
       // Keep logging but ensure error objects don't accumulate
-      console.log('Desktop buddy not running, will retry...');
+      console.log('Terminal buddy not running, will retry...');
       dot.style.backgroundColor = vividSkyBlue;
       text.textContent = 'Reconnecting...';
     }
@@ -938,7 +938,7 @@ class TaskBridgeTerminal {
         cache: 'no-cache'
       });
     } catch (error) {
-      console.log('Failed to send tasks to desktop buddy');
+      console.log('Failed to send tasks to Terminal buddy');
       dot.style.backgroundColor = 'red';
       text.textContent = 'Disconnected';
       this.isServerRunning = false;
@@ -1061,7 +1061,7 @@ resetButtonTerminal.addEventListener('click', () => {
   if (taskBridgeTerminal) {
     taskBridgeTerminal.destroy();
     taskBridgeTerminal = new TaskBridgeTerminal();
-    console.log("Task Buddy connection reset.");
+    console.log("Terminal Buddy connection reset.");
   }
 });
 
