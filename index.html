@@ -62,6 +62,7 @@
         </div>
         <button class="addButton custom-tooltip settings-button" data-tooltip="Volume ON">Sound ON</button>
         <button class="addButton custom-tooltip settings-button" data-tooltip="Link to download Task Buddy on bottom right (i)">Reset Task Buddy connection</button>
+        <button class="addButton custom-tooltip settings-button" data-tooltip="Buddy Terminal">Reset Buddy Terminal connection</button>
         <label for="ring-sound">Ring-sound:</label>
         <select id="ring-sound" class="dropdown">
             <option value="alarm">Half-Life</option>
@@ -88,6 +89,12 @@
             <div class="status-indicator" id="connectionStatus">
                 <span id="statusDot" class="status-dot"></span>
                 <span id="statusText" class="status-text">Disconnected</span>
+            </div>
+        </div>
+        <div class="connection-wrapper">
+            <div class="status-indicatorTerminal" id="connectionStatusTerminal">
+                <span id="statusDotTerminal" class="status-dotTerminal"></span>
+                <span id="statusTextTerminal" class="status-textTerminal">Disconnected</span>
             </div>
         </div>
         <div class="page-tittle-settings-container">

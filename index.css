@@ -408,3 +408,40 @@ input[type="range"] {
 .page-tittle-settings-container input[type="radio"] {
     margin-right: 6px;
 }
+
+/*Terminal style*/
+
+.status-dotTerminal {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background-color: red;
+    transition: background-color 0.3s;
+}
+
+.status-textTerminal {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    white-space: nowrap;
+    color: #333;
+    font-size: 0.9em;
+    position: absolute;
+    bottom: 30px;
+    left: -40px;
+}
+
+.status-indicatorTerminal {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: default;
+    top: 163px;
+    left: 293px;
+}
+
+.status-indicatorTerminal:hover .status-textTerminal {
+    opacity: 1;
+    transform: translateX(0);
+}
