@@ -996,39 +996,78 @@ class TaskBridgeTerminal {
   }
 }
 
-// Store the interval ID so we can clear it later
-let terminalSyncInterval = null;
+// Store the EventSource connection
+let terminalEventSource = null;
 
-// Listen for task updates from terminal
-terminalSyncInterval = setInterval(async () => {
-  try {
-    const response = await fetch('http://localhost:2137/tasks', {
-      signal: AbortSignal.timeout(5000),
-      cache: 'no-cache'
-    });
-
-    if (response.ok) {
-      const serverTasks = await response.json();
-      if (serverTasks && serverTasks.length > 0) {
-        const currentTasks = getTasks();
-
-        // Only update if data has actually changed
-        if (JSON.stringify(currentTasks) !== JSON.stringify(serverTasks)) {
-          saveTasks(serverTasks);
-          renderTasks();
-        }
-      }
-    }
-  } catch (error) {
-    // Silently fail if server not running
+// Function to connect to SSE stream
+function connectToTerminalSSE() {
+  // Close existing connection if any
+  if (terminalEventSource) {
+    terminalEventSource.close();
+    terminalEventSource = null;
   }
-}, 2000); // Check every 2 seconds
+
+  try {
+    // Connect to SSE endpoint
+    terminalEventSource = new EventSource('http://localhost:2137/tasks/stream');
+
+    terminalEventSource.onopen = () => {
+      console.log('✓ SSE connection established with terminal');
+      dotTerminal.style.backgroundColor = greenPrimary;
+      textTerminal.textContent = 'Connected (SSE)';
+    };
+
+    terminalEventSource.onmessage = (event) => {
+      try {
+        const serverTasks = JSON.parse(event.data);
+        if (serverTasks && serverTasks.length > 0) {
+          const currentTasks = getTasks();
+
+          // Only update if data has actually changed
+          if (JSON.stringify(currentTasks) !== JSON.stringify(serverTasks)) {
+            console.log('✓ Received task update from terminal via SSE');
+            saveTasks(serverTasks);
+            renderTasks();
+          }
+        }
+      } catch (error) {
+        console.error('Failed to parse SSE message:', error);
+      }
+    };
+
+    terminalEventSource.onerror = (error) => {
+      console.log('SSE connection error, will retry...');
+      dotTerminal.style.backgroundColor = vividSkyBlue;
+      textTerminal.textContent = 'Reconnecting...';
+
+      // Close and retry after 5 seconds
+      if (terminalEventSource) {
+        terminalEventSource.close();
+        terminalEventSource = null;
+      }
+
+      setTimeout(() => {
+        connectToTerminalSSE();
+      }, 5000);
+    };
+
+  } catch (error) {
+    console.error('Failed to create SSE connection:', error);
+    dotTerminal.style.backgroundColor = 'red';
+    textTerminal.textContent = 'Disconnected';
+  }
+}
+
+// Start SSE connection when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  connectToTerminalSSE();
+});
 
 // Clean up when page is unloaded
 window.addEventListener('beforeunload', () => {
-  if (terminalSyncInterval) {
-    clearInterval(terminalSyncInterval);
-    terminalSyncInterval = null;
+  if (terminalEventSource) {
+    terminalEventSource.close();
+    terminalEventSource = null;
   }
 });
 
