@@ -195,18 +195,6 @@ document.querySelectorAll('input[name="pageTitle"]').forEach(radio => {
 function renderTasks() {
   const tasks = getTasks();
   const list = document.getElementById('task-list');
-
-  // Remember previously focused/selected task by id
-  const previouslyFocused = document.activeElement;
-  let prevTaskId = null;
-
-  if (previouslyFocused) {
-    const match = previouslyFocused.id && previouslyFocused.id.match(/^task-(.+)$/);
-    if (match) {
-      prevTaskId = match[1]; // the task.id part
-    }
-  }
-
   list.innerHTML = '';
 
   // Sort tasks by dueTime (earlier due times first)
@@ -217,12 +205,7 @@ function renderTasks() {
     li.innerHTML = `
       <div class="container">
         <div>
-          <input
-            type="checkbox"
-            id="task-${task.id}"
-            ${task.checked ? 'checked' : ''}
-            onchange="toggleTask('${task.id}', this.checked)"
-          >
+          <input type="checkbox" id="task-${task.id}" ${task.checked ? 'checked' : ''} onchange="toggleTask('${task.id}', this.checked)">
         </div>
         <div>
           <label for="task-${task.id}">
@@ -238,14 +221,6 @@ function renderTasks() {
     `;
     list.appendChild(li);
   });
-
-  // Restore focus to the same checkbox if it still exists
-  if (prevTaskId) {
-    const checkbox = document.getElementById(`task-${prevTaskId}`);
-    if (checkbox) {
-      checkbox.focus();
-    }
-  }
 }
 
 // Toggle a task's checked state
