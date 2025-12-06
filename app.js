@@ -65,6 +65,8 @@ function getTasks() {
   return tasksJSON ? JSON.parse(tasksJSON) : [];
 }
 
+let isUpdatingFromSSE = false;
+
 // Helper: save tasks to localStorage
 function saveTasks(tasks) {
   localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -231,17 +233,10 @@ function toggleTask(id, checked) {
     task.checked = checked;
     if (checked) {
       task.alarmTriggered = false;
-
-      // 🔴 Stop blinking immediately when a task is completed
-      if (titleBlinkInterval) {
-        clearInterval(titleBlinkInterval);
-        titleBlinkInterval = null;
-      }
-
-      document.title = `Did I take it?`;
     }
     saveTasks(tasks);
     renderTasks();
+    checkOverdueTasks();
   }
 }
 
@@ -879,15 +874,15 @@ class TaskBridgeTerminal {
     this.sendInterval = null;
     this.lastSentTasksJson = '';
     this.lastSendTime = 0;
+    this.eventListenersAdded = false;
     this.startServer();
   }
 
   async startServer() {
     try {
       const response = await fetch(`http://localhost:${this.serverPort}/ping`, {
-        // Add timeout and proper cleanup for fetch requests
-        signal: AbortSignal.timeout(5000), // 5 second timeout
-        cache: 'no-cache' // Prevent caching
+        signal: AbortSignal.timeout(5000),
+        cache: 'no-cache'
       });
       if (response.ok) {
         this.isServerRunning = true;
@@ -898,19 +893,16 @@ class TaskBridgeTerminal {
         return;
       }
     } catch (error) {
-      // Keep logging but ensure error objects don't accumulate
       console.log('Terminal buddy not running, will retry...');
       dotTerminal.style.backgroundColor = vividSkyBlue;
       textTerminal.textContent = 'Reconnecting...';
     }
 
-    // CRITICAL FIX: Always clear existing interval before creating new one
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
     }
 
-    // Only create new interval if we don't already have one running
     if (!this.isServerRunning && !this.checkInterval) {
       this.checkInterval = setInterval(() => {
         this.startServer();
@@ -921,10 +913,14 @@ class TaskBridgeTerminal {
   async sendTasks(force = false) {
     if (!this.isServerRunning) return;
 
+    if (isUpdatingFromSSE) {
+      console.log('Skipping send - currently receiving SSE update');
+      return;
+    }
+
     const now = Date.now();
     const tasksJson = JSON.stringify(getTasks());
 
-    // Avoid sending if data is identical and sent recently
     if (!force && tasksJson === this.lastSentTasksJson && now - this.lastSendTime < 5000) {
       return;
     }
@@ -937,7 +933,6 @@ class TaskBridgeTerminal {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: tasksJson,
-        // Add timeout to prevent hanging requests
         signal: AbortSignal.timeout(5000),
         cache: 'no-cache'
       });
@@ -950,39 +945,36 @@ class TaskBridgeTerminal {
   }
 
   startSendingTasks() {
-    // Send immediately when connected
     this.sendTasks(true);
 
-    // CRITICAL FIX: Clear existing interval before creating new one
     if (this.sendInterval) {
       clearInterval(this.sendInterval);
       this.sendInterval = null;
     }
 
-    // Periodic send for overdue checks
     this.sendInterval = setInterval(() => {
       this.sendTasks();
     }, 30000);
 
-    // CRITICAL FIX: Only add event listeners once to prevent duplicates
     if (!this.eventListenersAdded) {
-      // Send whenever tasks are saved (checkbox clicked, etc.)
       const originalSaveTasks = window.saveTasks;
       window.saveTasks = (tasks) => {
         originalSaveTasks(tasks);
-        this.sendTasks(true); // force send immediately
+        if (!isUpdatingFromSSE) {
+          this.sendTasks(true);
+        }
       };
 
-      // Detect tab focus (switching back to buddy) & send overdue status instantly
       window.addEventListener('focus', () => {
-        this.sendTasks(true);
+        if (!isUpdatingFromSSE) {
+          this.sendTasks(true);
+        }
       });
 
       this.eventListenersAdded = true;
     }
   }
 
-  // Method to clean up intervals when needed
   destroy() {
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
@@ -996,19 +988,15 @@ class TaskBridgeTerminal {
   }
 }
 
-// Store the EventSource connection
 let terminalEventSource = null;
 
-// Function to connect to SSE stream
 function connectToTerminalSSE() {
-  // Close existing connection if any
   if (terminalEventSource) {
     terminalEventSource.close();
     terminalEventSource = null;
   }
 
   try {
-    // Connect to SSE endpoint
     terminalEventSource = new EventSource('http://localhost:2137/tasks/stream');
 
     terminalEventSource.onopen = () => {
@@ -1023,11 +1011,18 @@ function connectToTerminalSSE() {
         if (serverTasks && serverTasks.length > 0) {
           const currentTasks = getTasks();
 
-          // Only update if data has actually changed
           if (JSON.stringify(currentTasks) !== JSON.stringify(serverTasks)) {
             console.log('✓ Received task update from terminal via SSE');
+
+            isUpdatingFromSSE = true;
+
             saveTasks(serverTasks);
             renderTasks();
+            checkOverdueTasks();
+
+            setTimeout(() => {
+              isUpdatingFromSSE = false;
+            }, 100);
           }
         }
       } catch (error) {
@@ -1040,7 +1035,6 @@ function connectToTerminalSSE() {
       dotTerminal.style.backgroundColor = vividSkyBlue;
       textTerminal.textContent = 'Reconnecting...';
 
-      // Close and retry after 5 seconds
       if (terminalEventSource) {
         terminalEventSource.close();
         terminalEventSource = null;
