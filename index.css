@@ -86,8 +86,14 @@ ul, ol {
     width: 508px;
 }
 
-#task-form input[type="text"],
 #task-form input[type="time"] {
+    /*width: 100%;*/
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+}
+
+#task-form input[type="text"]{
     width: 100%;
     padding: 10px;
     border-radius: 8px;
@@ -95,7 +101,7 @@ ul, ol {
 }
 
 #task-form button {
-    width: 100%;
+    width: 67%;
 }
 
 
