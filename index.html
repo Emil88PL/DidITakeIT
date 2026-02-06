@@ -36,6 +36,16 @@
     <form id="task-form">
         <input type="text" id="task-name" placeholder="Task name" required />
         <input type="time" id="due-time" required />
+        <div class="day-picker" aria-label="Active days">
+            <span class="day-picker-label">Days:</span>
+            <label><input type="checkbox" class="day-checkbox" value="1" checked>Mon</label>
+            <label><input type="checkbox" class="day-checkbox" value="2" checked>Tue</label>
+            <label><input type="checkbox" class="day-checkbox" value="3" checked>Wed</label>
+            <label><input type="checkbox" class="day-checkbox" value="4" checked>Thu</label>
+            <label><input type="checkbox" class="day-checkbox" value="5" checked>Fri</label>
+            <label><input type="checkbox" class="day-checkbox" value="6" checked>Sat</label>
+            <label><input type="checkbox" class="day-checkbox" value="0" checked>Sun</label>
+        </div>
         <button type="submit" class="addButton">Add Task</button>
     </form>
 

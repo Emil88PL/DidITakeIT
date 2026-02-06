@@ -62,7 +62,18 @@ document.getElementById('check-frequency').addEventListener('change', setupInter
 // Helper: get tasks from localStorage
 function getTasks() {
   const tasksJSON = localStorage.getItem('tasks');
-  return tasksJSON ? JSON.parse(tasksJSON) : [];
+  const tasks = tasksJSON ? JSON.parse(tasksJSON) : [];
+  let changed = false;
+  tasks.forEach(task => {
+    if (!Array.isArray(task.activeDays) || task.activeDays.length === 0) {
+      task.activeDays = [0, 1, 2, 3, 4, 5, 6];
+      changed = true;
+    }
+  });
+  if (changed) {
+    saveTasks(tasks);
+  }
+  return tasks;
 }
 
 let isUpdatingFromSSE = false;
@@ -75,6 +86,44 @@ function saveTasks(tasks) {
 // Helper: generate a unique id (using timestamp + random component)
 function generateId() {
   return Date.now().toString() + Math.floor(Math.random() * 10000).toString();
+}
+
+const WEEK_DAYS = [
+  { label: "Mon", value: 1 },
+  { label: "Tue", value: 2 },
+  { label: "Wed", value: 3 },
+  { label: "Thu", value: 4 },
+  { label: "Fri", value: 5 },
+  { label: "Sat", value: 6 },
+  { label: "Sun", value: 0 }
+];
+
+function isTaskActiveOnDay(task, dayIndex) {
+  if (!Array.isArray(task.activeDays) || task.activeDays.length === 0) return true;
+  return task.activeDays.includes(dayIndex);
+}
+
+function isTaskActiveToday(task) {
+  return isTaskActiveOnDay(task, new Date().getDay());
+}
+
+function formatActiveDays(activeDays) {
+  if (!Array.isArray(activeDays) || activeDays.length === 0 || activeDays.length === 7) {
+    return "Every day";
+  }
+  const dayLabels = WEEK_DAYS.filter(d => activeDays.includes(d.value)).map(d => d.label);
+  return dayLabels.join(" ");
+}
+
+function getNextActiveDate(task, fromDate) {
+  for (let i = 0; i < 7; i++) {
+    const candidate = new Date(fromDate);
+    candidate.setDate(fromDate.getDate() + i);
+    if (isTaskActiveOnDay(task, candidate.getDay())) {
+      return candidate;
+    }
+  }
+  return new Date(fromDate);
 }
 
 // Preset tasks definitions that's needs adjustment
@@ -203,7 +252,11 @@ function renderTasks() {
   tasks.sort((a, b) => new Date(a.dueTime) - new Date(b.dueTime));
 
   tasks.forEach(task => {
+    const activeToday = isTaskActiveToday(task);
     const li = document.createElement('li');
+    if (!activeToday) {
+      li.classList.add('inactive-task');
+    }
     li.innerHTML = `
       <div class="container">
         <div>
@@ -211,18 +264,54 @@ function renderTasks() {
         </div>
         <div>
           <label for="task-${task.id}">
-            <span>${task.name} (Due: ${new Date(task.dueTime).toLocaleTimeString()})</span>
+            <span>${task.name} (${activeToday ? `Due: ${new Date(task.dueTime).toLocaleTimeString()}` : 'Inactive today'})</span>
+            <span class="task-days">Active: ${formatActiveDays(task.activeDays)}</span>
           </label>
         </div>
         <div>
           <button onclick="deleteTask('${task.id}')" class="deleteButton">Delete</button>
           <button onclick="editTask('${task.id}')" class="editButton">Edit</button>
+          <button onclick="toggleDaysEditor('${task.id}')" class="editButton">Days</button>
         </div>
       </div>
-      ${task.alarmTriggered ? '<strong style="color:red;"> Unfinished Task!</strong>' : ''}
+      <div id="days-editor-${task.id}" class="day-editor" aria-label="Edit active days">
+        ${WEEK_DAYS.map(d => {
+          const checked = task.activeDays && task.activeDays.includes(d.value) ? 'checked' : '';
+          return `<label><input type="checkbox" onchange="updateTaskDays('${task.id}', ${d.value}, this.checked)" ${checked}>${d.label}</label>`;
+        }).join('')}
+      </div>
+      ${task.alarmTriggered && activeToday ? '<strong style="color:red;"> Unfinished Task!</strong>' : ''}
     `;
     list.appendChild(li);
   });
+}
+
+function toggleDaysEditor(id) {
+  const editor = document.getElementById(`days-editor-${id}`);
+  if (!editor) return;
+  editor.classList.toggle('show');
+}
+
+function updateTaskDays(id, dayValue, checked) {
+  const tasks = getTasks();
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  if (!Array.isArray(task.activeDays) || task.activeDays.length === 0) {
+    task.activeDays = [0, 1, 2, 3, 4, 5, 6];
+  }
+  if (checked) {
+    if (!task.activeDays.includes(dayValue)) {
+      task.activeDays.push(dayValue);
+    }
+  } else {
+    task.activeDays = task.activeDays.filter(d => d !== dayValue);
+  }
+  if (task.activeDays.length === 0) {
+    task.activeDays = [0, 1, 2, 3, 4, 5, 6];
+  }
+  saveTasks(tasks);
+  renderTasks();
+  checkOverdueTasks();
 }
 
 // Toggle a task's checked state
@@ -343,6 +432,9 @@ function checkOverdueTasks() {
   const overdueTasks = [];
 
   tasks.forEach(task => {
+    if (!isTaskActiveToday(task)) {
+      return;
+    }
     const taskDue = new Date(task.dueTime);
     const localTaskDue = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate(), taskDue.getHours(), taskDue.getMinutes(), taskDue.getSeconds());
 
@@ -444,24 +536,19 @@ function checkDueTime() {
   const tasks = getTasks();
   let changed = false;
   const now = new Date();
-
-  // Today's date at midnight UTC
-  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   tasks.forEach(task => {
-    // Convert dueTime string to a Date object
     const taskDue = new Date(task.dueTime);
-    // Create a date object for the task's date (without time)
-    const taskDueDate = new Date(Date.UTC(taskDue.getUTCFullYear(), taskDue.getUTCMonth(), taskDue.getUTCDate()));
+    const taskDueDate = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate());
 
-    // If the task's due date is before today, update it to today (preserving the time)
+    // If the task's due date is before today, update it to next active day (preserving the time)
     if (taskDueDate < today) {
-      // Create a new due time for today with the same hour, minute, second, and millisecond
-      let newDueTime = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-      newDueTime.setUTCHours(taskDue.getUTCHours(), taskDue.getUTCMinutes(), taskDue.getUTCSeconds(), taskDue.getUTCMilliseconds());
+      const nextActiveDate = getNextActiveDate(task, today);
+      let newDueTime = new Date(nextActiveDate.getFullYear(), nextActiveDate.getMonth(), nextActiveDate.getDate());
+      newDueTime.setHours(taskDue.getHours(), taskDue.getMinutes(), taskDue.getSeconds(), taskDue.getMilliseconds());
 
       task.dueTime = newDueTime.toISOString();
-      // Optionally, reset the alarm flag so the alarm check starts fresh for the new day:
       task.alarmTriggered = false;
       changed = true;
       task.checked = false;
@@ -499,7 +586,8 @@ document.getElementById('preset-select').addEventListener('change', function(e) 
         checked: false,
         alarmTriggered: false,
         isPreset: true,
-        presetType: newPreset
+        presetType: newPreset,
+        activeDays: [0, 1, 2, 3, 4, 5, 6]
       });
     });
   }
@@ -513,6 +601,11 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
   e.preventDefault();
   const name = document.getElementById('task-name').value;
   const timeInput = document.getElementById('due-time').value;
+  const selectedDays = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(cb => Number(cb.value));
+  if (selectedDays.length === 0) {
+    alert("Select at least one active day.");
+    return;
+  }
   const now = new Date();
   const [hours, minutes] = timeInput.split(':');
   now.setHours(hours, minutes, 0, 0);
@@ -523,7 +616,8 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
     dueTime: now.toISOString(),
     checked: false,
     alarmTriggered: false,
-    isPreset: false
+    isPreset: false,
+    activeDays: selectedDays
   };
 
   const tasks = getTasks();
@@ -531,6 +625,9 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
   saveTasks(tasks);
   renderTasks();
   e.target.reset();
+  document.querySelectorAll('.day-checkbox').forEach(cb => {
+    cb.checked = true;
+  });
 });
 
 // Initial render of tasks on page load
