@@ -186,6 +186,7 @@ form#task-form input, #check-frequency {
     margin-right: 4px;
 }
 
+.day-editor label,
 .day-picker label {
     display: inline-flex;
     align-items: center;
@@ -215,16 +216,6 @@ form#task-form input, #check-frequency {
 
 .day-editor.show {
     display: flex;
-}
-
-.day-editor label {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: #f4f4f4;
-    border-radius: 6px;
-    padding: 2px 6px;
-    font-size: 0.85rem;
 }
 
 .info-icon {
