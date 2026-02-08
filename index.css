@@ -83,7 +83,7 @@ ul, ol {
     /*background: rgba(255, 255, 255, 0.1);*/
     border-radius: 12px;
     backdrop-filter: blur(4px);
-    width: 508px;
+    width: 530px;
 }
 
 #task-form input[type="time"] {
