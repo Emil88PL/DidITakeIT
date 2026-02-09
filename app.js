@@ -264,7 +264,7 @@ function renderTasks() {
         </div>
         <div>
           <label for="task-${task.id}">
-            <span>${task.name} (${activeToday ? `Due: ${new Date(task.dueTime).toLocaleTimeString()}` : 'Inactive today'})</span>
+            <span>${task.name} (${activeToday ? `Due: ${new Date(task.dueTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false})}` : 'Inactive today'})</span>
             <span class="task-days">Active: ${formatActiveDays(task.activeDays)}</span>
           </label>
         </div>
@@ -400,9 +400,9 @@ function sendTelegramMessage(tasks) {
   let messageText;
   if (Array.isArray(tasks)) {
     if (tasks.length === 0) return;
-    const taskList = tasks.map(t => `- ${t.name} (Due: ${new Date(t.dueTime).toLocaleString()})`).join('\n');
+    const taskList = tasks.map(t => `- ${t.name} (Due: ${new Date(t.dueTime).toLocaleString([], {hour: '2-digit', minute:'2-digit', hour12: false})})`).join('\n');
     if (tasks.length === 1) {
-      const dueTimeStr = new Date(tasks[0].dueTime).toLocaleString();
+      const dueTimeStr = new Date(tasks[0].dueTime).toLocaleString([], {hour: '2-digit', minute:'2-digit', hour12: false});
       messageText = `Hi ${chatName}!, ${tasks[0].name} (Due: ${dueTimeStr})`;
     } else {
       messageText = `Hi ${chatName}! You have overdue tasks:\n${taskList} \n Task to finish: ${tasks.length}`;
