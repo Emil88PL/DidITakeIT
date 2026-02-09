@@ -422,24 +422,19 @@ function editTask(id) {
   renderTasks();
 }
 
-// Function to send Telegram message for a single overdue task
-function sendTelegramMessage(task) {
-  // Check if we should send notification based on exponential backoff
-  if (!shouldSendTelegramNotification(task.id)) {
-    return;
-  }
+// Function to send Telegram message for overdue tasks
+function sendTelegramMessage(allOverdueTasks, triggeringTaskId) {
+  if (!allOverdueTasks || allOverdueTasks.length === 0) return;
   
-  // Get or create notification state
+  // Update notification state for the triggering task only
   const now = Date.now();
-  let state = getTaskNotificationState(task.id);
+  let state = getTaskNotificationState(triggeringTaskId);
   if (!state) {
-    state = { taskId: task.id, firstSent: now, lastSent: now, sendCount: 0 };
+    state = { taskId: triggeringTaskId, firstSent: now, lastSent: now, sendCount: 0 };
   }
-  
-  // Update state
   state.lastSent = now;
   state.sendCount = (state.sendCount || 0) + 1;
-  saveTaskNotificationState(task.id, state);
+  saveTaskNotificationState(triggeringTaskId, state);
   
   let raw = localStorage.getItem("telegramDidITakeIt");
   let botToken, chatId, toggle, chatName;
@@ -469,9 +464,25 @@ function sendTelegramMessage(task) {
     return;
   }
 
-  const dueTimeStr = new Date(task.dueTime).toLocaleString([], {hour: '2-digit', minute:'2-digit', hour12: false});
-  const reminderText = getReminderText(state.sendCount);
-  const messageText = `Hi ${chatName}!, ${task.name} (Due: ${dueTimeStr})${reminderText}`;
+  // Build message showing all overdue tasks with their individual reminder counts
+  const triggeringTask = allOverdueTasks.find(t => t.id === triggeringTaskId);
+  const triggeringTaskState = getTaskNotificationState(triggeringTaskId);
+  const triggeringReminderText = getReminderText(triggeringTaskState ? triggeringTaskState.sendCount : 1);
+  
+  let messageText;
+  if (allOverdueTasks.length === 1) {
+    const task = allOverdueTasks[0];
+    const dueTimeStr = new Date(task.dueTime).toLocaleString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+    messageText = `Hi ${chatName}!, ${task.name} (Due: ${dueTimeStr})${triggeringReminderText}`;
+  } else {
+    const taskList = allOverdueTasks.map(t => {
+      const dueTimeStr = new Date(t.dueTime).toLocaleString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+      const tState = getTaskNotificationState(t.id);
+      const tReminderText = getReminderText(tState ? tState.sendCount : 0);
+      return `- ${t.name} (Due: ${dueTimeStr})${tReminderText}`;
+    }).join('\n');
+    messageText = `Hi ${chatName}! You have ${allOverdueTasks.length} overdue tasks:\n${taskList}`;
+  }
 
   const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(messageText)}`;
 
@@ -494,15 +505,16 @@ function checkOverdueTasks() {
   const now = new Date();
   let shouldPlayAlarm = false;
   let tasksUpdated = false;
+  const overdueTasks = [];
+  let triggeringTaskId = null;
 
+  // First pass: collect all overdue tasks and find which one should trigger notification
   tasks.forEach(task => {
     if (!isTaskActiveToday(task)) {
       return;
     }
     const taskDue = new Date(task.dueTime);
     const localTaskDue = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate(), taskDue.getHours(), taskDue.getMinutes(), taskDue.getSeconds());
-
-    // console.log(`Checking task: ${task.name}, Due: ${localTaskDue.toLocaleString()}, Now: ${now.toLocaleString()}, Checked: ${task.checked}, AlarmTriggered: ${task.alarmTriggered}`);
 
     if (!task.checked && localTaskDue <= now) {
       // console.log(`Task "${task.name}" is overdue.`);
@@ -511,11 +523,20 @@ function checkOverdueTasks() {
         task.alarmTriggered = true;
         tasksUpdated = true;
       }
-      // Send Telegram notification with exponential backoff per task
-      sendTelegramMessage(task);
+      overdueTasks.push(task);
       shouldPlayAlarm = true;
+      
+      // Check if this task should trigger a notification
+      if (shouldSendTelegramNotification(task.id)) {
+        triggeringTaskId = task.id;
+      }
     }
   });
+
+  // Send consolidated Telegram message if any task triggered it
+  if (overdueTasks.length > 0 && triggeringTaskId) {
+    sendTelegramMessage(overdueTasks, triggeringTaskId);
+  }
 
   if (tasksUpdated) {
     saveTasks(tasks);
