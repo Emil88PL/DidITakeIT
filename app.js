@@ -20,6 +20,59 @@ const greenPrimary = "#4CAF50";
 // Session (in-memory) credentials when user clicks “Use”
 let sessionTelegram = { botToken: null, chatId: null, toggle: "OFF" };
 
+// Exponential backoff delays for Telegram notifications (in minutes): 2, 4, 8, 16, 32, 64, 128, then 256
+const TELEGRAM_BACKOFF_DELAYS = [2, 4, 8, 16, 32, 64, 128, 256];
+
+// Helper: Get notification state for a task
+function getTaskNotificationState(taskId) {
+  const state = localStorage.getItem(`telegramNotify_${taskId}`);
+  return state ? JSON.parse(state) : null;
+}
+
+// Helper: Save notification state for a task
+function saveTaskNotificationState(taskId, state) {
+  localStorage.setItem(`telegramNotify_${taskId}`, JSON.stringify(state));
+}
+
+// Helper: Clear notification state for a task
+function clearTaskNotificationState(taskId) {
+  localStorage.removeItem(`telegramNotify_${taskId}`);
+}
+
+// Helper: Check if we should send a Telegram notification for a task
+function shouldSendTelegramNotification(taskId) {
+  const now = Date.now();
+  const state = getTaskNotificationState(taskId);
+  
+  if (!state) {
+    // First notification - always send
+    return true;
+  }
+  
+  const sendCount = state.sendCount || 0;
+  const lastSent = state.lastSent || 0;
+  
+  // Get the appropriate delay based on send count
+  let delayMinutes;
+  if (sendCount < TELEGRAM_BACKOFF_DELAYS.length) {
+    delayMinutes = TELEGRAM_BACKOFF_DELAYS[sendCount - 1]; // -1 because first notification is sendCount=1
+  } else {
+    delayMinutes = 256; // After 128, always 256
+  }
+  
+  const delayMs = delayMinutes * 60 * 1000;
+  const timeSinceLastSent = now - lastSent;
+  
+  return timeSinceLastSent >= delayMs;
+}
+
+// Helper: Get reminder text based on notification count
+function getReminderText(sendCount) {
+  if (sendCount === 1) return "";
+  if (sendCount === 2) return " (Reminder 1)";
+  return ` (Reminder ${sendCount - 1})`;
+}
+
 // Function to load check frequency from localStorage, default to 1 minute if not set
 function loadCheckFrequency() {
   return localStorage.getItem('checkFrequency') || "1";
@@ -322,6 +375,8 @@ function toggleTask(id, checked) {
     task.checked = checked;
     if (checked) {
       task.alarmTriggered = false;
+      // Clear Telegram notification state when task is completed
+      clearTaskNotificationState(task.id);
     }
     saveTasks(tasks);
     renderTasks();
@@ -367,8 +422,25 @@ function editTask(id) {
   renderTasks();
 }
 
-// Function to send Telegram message for overdue tasks
-function sendTelegramMessage(tasks) {
+// Function to send Telegram message for a single overdue task
+function sendTelegramMessage(task) {
+  // Check if we should send notification based on exponential backoff
+  if (!shouldSendTelegramNotification(task.id)) {
+    return;
+  }
+  
+  // Get or create notification state
+  const now = Date.now();
+  let state = getTaskNotificationState(task.id);
+  if (!state) {
+    state = { taskId: task.id, firstSent: now, lastSent: now, sendCount: 0 };
+  }
+  
+  // Update state
+  state.lastSent = now;
+  state.sendCount = (state.sendCount || 0) + 1;
+  saveTaskNotificationState(task.id, state);
+  
   let raw = localStorage.getItem("telegramDidITakeIt");
   let botToken, chatId, toggle, chatName;
   if (raw) {
@@ -397,17 +469,9 @@ function sendTelegramMessage(tasks) {
     return;
   }
 
-  let messageText;
-  if (Array.isArray(tasks)) {
-    if (tasks.length === 0) return;
-    const taskList = tasks.map(t => `- ${t.name} (Due: ${new Date(t.dueTime).toLocaleString([], {hour: '2-digit', minute:'2-digit', hour12: false})})`).join('\n');
-    if (tasks.length === 1) {
-      const dueTimeStr = new Date(tasks[0].dueTime).toLocaleString([], {hour: '2-digit', minute:'2-digit', hour12: false});
-      messageText = `Hi ${chatName}!, ${tasks[0].name} (Due: ${dueTimeStr})`;
-    } else {
-      messageText = `Hi ${chatName}! You have overdue tasks:\n${taskList} \n Task to finish: ${tasks.length}`;
-    }
-  }
+  const dueTimeStr = new Date(task.dueTime).toLocaleString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+  const reminderText = getReminderText(state.sendCount);
+  const messageText = `Hi ${chatName}!, ${task.name} (Due: ${dueTimeStr})${reminderText}`;
 
   const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(messageText)}`;
 
@@ -429,7 +493,7 @@ function checkOverdueTasks() {
   const tasks = getTasks();
   const now = new Date();
   let shouldPlayAlarm = false;
-  const overdueTasks = [];
+  let tasksUpdated = false;
 
   tasks.forEach(task => {
     if (!isTaskActiveToday(task)) {
@@ -445,14 +509,15 @@ function checkOverdueTasks() {
       if (!task.alarmTriggered) {
         // console.log(`Alarm not yet triggered for "${task.name}". Triggering now.`);
         task.alarmTriggered = true;
+        tasksUpdated = true;
       }
-      overdueTasks.push(task);
+      // Send Telegram notification with exponential backoff per task
+      sendTelegramMessage(task);
       shouldPlayAlarm = true;
     }
   });
 
-  if (overdueTasks.length > 0) {
-    sendTelegramMessage(overdueTasks);
+  if (tasksUpdated) {
     saveTasks(tasks);
     renderTasks();
   }
