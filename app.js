@@ -1378,3 +1378,154 @@ playSoundButton.addEventListener("click", () => {
     console.log("Sound is muted, cannot preview.");
   }
 });
+
+// --- Floating Stars Background ---
+const STAR_COUNT = 42;
+const DIRECTION_CHANGE_INTERVAL = 13000; // 13 seconds
+const STAR_SPEED = 0.3; // Very slow speed
+
+const directions = [
+  { x: 0, y: -1 },   // up
+  { x: 0, y: 1 },    // down
+  { x: -1, y: 0 },   // left
+  { x: 1, y: 0 },    // right
+  { x: -0.7, y: -0.7 }, // up-left
+  { x: 0.7, y: -0.7 },  // up-right
+  { x: -0.7, y: 0.7 },  // down-left
+  { x: 0.7, y: 0.7 }    // down-right
+];
+
+// --- Stars Toggle Functionality ---
+const STARS_ENABLED_KEY = 'starsEnabled';
+
+function loadStarsState() {
+  const saved = localStorage.getItem(STARS_ENABLED_KEY);
+  return saved !== null ? saved === 'true' : true; // Default to ON
+}
+
+function saveStarsState(enabled) {
+  localStorage.setItem(STARS_ENABLED_KEY, enabled.toString());
+}
+
+function updateStarsToggleButton(button, enabled) {
+  button.textContent = enabled ? 'ON' : 'OFF';
+  if (enabled) {
+    button.classList.add('addButton');
+    button.classList.remove('deleteButton');
+  } else {
+    button.classList.add('deleteButton');
+    button.classList.remove('addButton');
+  }
+}
+
+function toggleStars(enabled) {
+  const container = document.getElementById('stars-container');
+  if (container) {
+    container.style.display = enabled ? 'block' : 'none';
+  }
+  saveStarsState(enabled);
+}
+
+function createStars() {
+  const container = document.getElementById('stars-container');
+  if (!container) return;
+  
+  // Check if stars are enabled
+  const enabled = loadStarsState();
+  if (!enabled) {
+    container.style.display = 'none';
+    return;
+  }
+  
+  const stars = [];
+  
+  for (let i = 0; i < STAR_COUNT; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    
+    // Random size
+    const sizeClass = Math.random() < 0.33 ? 'small' : (Math.random() < 0.5 ? 'medium' : 'large');
+    star.classList.add(sizeClass);
+    
+    // Random starting position
+    const x = Math.random() * 100;
+    const y = Math.random() * 100;
+    star.style.left = x + '%';
+    star.style.top = y + '%';
+    
+    // Store star data for animation
+    const starData = {
+      element: star,
+      x: x,
+      y: y,
+      direction: directions[Math.floor(Math.random() * directions.length)],
+      speed: STAR_SPEED + (Math.random() * 0.2) // Slight speed variation
+    };
+    
+    stars.push(starData);
+    container.appendChild(star);
+  }
+  
+  // Animation loop
+  function animateStars() {
+    stars.forEach(star => {
+      // Update position
+      star.x += star.direction.x * star.speed * 0.1;
+      star.y += star.direction.y * star.speed * 0.1;
+      
+      // Wrap around screen
+      if (star.x < -2) star.x = 102;
+      if (star.x > 102) star.x = -2;
+      if (star.y < -2) star.y = 102;
+      if (star.y > 102) star.y = -2;
+      
+      // Apply position
+      star.element.style.left = star.x + '%';
+      star.element.style.top = star.y + '%';
+    });
+    
+    requestAnimationFrame(animateStars);
+  }
+  
+  // Change directions every 13 seconds
+  function changeDirections() {
+    stars.forEach(star => {
+      star.direction = directions[Math.floor(Math.random() * directions.length)];
+    });
+  }
+  
+  // Start animation
+  animateStars();
+  
+  // Change directions periodically
+  setInterval(changeDirections, DIRECTION_CHANGE_INTERVAL);
+}
+
+// Initialize stars when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize stars
+  createStars();
+  
+  // Initialize stars toggle button
+  const starsToggleBtn = document.getElementById('stars-toggle');
+  if (starsToggleBtn) {
+    const enabled = loadStarsState();
+    updateStarsToggleButton(starsToggleBtn, enabled);
+    
+    starsToggleBtn.addEventListener('click', () => {
+      const newEnabled = starsToggleBtn.textContent === 'OFF';
+      updateStarsToggleButton(starsToggleBtn, newEnabled);
+      toggleStars(newEnabled);
+      
+      // If turning on and stars weren't created yet, create them now
+      if (newEnabled) {
+        const container = document.getElementById('stars-container');
+        if (container && container.children.length === 0) {
+          createStars();
+        } else if (container) {
+          container.style.display = 'block';
+        }
+      }
+    });
+  }
+});

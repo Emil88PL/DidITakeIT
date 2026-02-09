@@ -65,6 +65,10 @@
             <option value="7">7 min</option>
             <option value="10">10 min</option>
         </select>
+        <div class="stars-toggle-wrapper">
+            <label>Floating Stars:</label>
+            <button id="stars-toggle" class="addButton settings-button">ON</button>
+        </div>
         <div>
             <label for="volume-control">Volume:</label>
             <input type="range" id="volume-control" min="0" max="1" step="0.05">
@@ -193,6 +197,9 @@
 
     <!-- Alarm sound element -->
     <audio id="alarm-sound" src="alarm.mp3" preload="auto"></audio>
+
+    <!-- Floating Stars Container -->
+    <div id="stars-container" class="stars-container"></div>
 
     <script src="app.js"></script>
     </body>
