@@ -1599,7 +1599,7 @@ function updateQuotePosition() {
   
   const rect = currentQuoteStar.getBoundingClientRect();
   currentQuoteBubble.style.left = (rect.left + rect.width / 2) + 'px';
-  currentQuoteBubble.style.top = (rect.top - 40) + 'px';
+  currentQuoteBubble.style.top = (rect.top - 25) + 'px';
   
   quoteAnimationFrame = requestAnimationFrame(updateQuotePosition);
 }
@@ -1632,7 +1632,7 @@ function showQuoteBubble() {
   // Position bubble above the star
   const rect = star.getBoundingClientRect();
   bubble.style.left = (rect.left + rect.width / 2) + 'px';
-  bubble.style.top = (rect.top - 40) + 'px';
+  bubble.style.top = (rect.top - 25) + 'px';
   
   document.body.appendChild(bubble);
   currentQuoteBubble = bubble;
