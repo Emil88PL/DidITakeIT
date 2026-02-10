@@ -423,6 +423,81 @@ form#task-form input, #check-frequency {
     padding: 20px;
 }
 
+.telegram-container.collapsed {
+    overflow: hidden;
+}
+
+.telegram-container.collapsed .telegram-hide-handle {
+    display: none;
+}
+
+.telegram-hide-handle {
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+    height: 12px;
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: height 0.2s ease-in-out;
+    margin: -20px -20px 10px -20px;
+    width: calc(100% + 40px);
+}
+
+.telegram-hide-handle:hover {
+    height: 28px;
+}
+
+.handle-text {
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.telegram-hide-handle:hover .handle-text {
+    opacity: 1;
+}
+
+.telegram-show-button {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(50%);
+    background: linear-gradient(135deg, #00b9fe, #0088cc);
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 20px 20px 0 0;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    white-space: nowrap;
+    overflow: hidden;
+    z-index: 1001;
+}
+
+.telegram-show-button:hover {
+    transform: translateX(-50%) translateY(0);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.show-text {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.telegram-show-button:hover .show-text {
+    opacity: 1;
+}
+
 .inputs {
     display: flex;
     flex-direction: column;
@@ -491,6 +566,11 @@ button {
 @media (max-width: 630px) {
     .telegram-container {
         margin-bottom: 50px;
+    }
+
+    .telegram-show-button {
+        padding: 6px 18px;
+        font-size: 12px;
     }
 }
 

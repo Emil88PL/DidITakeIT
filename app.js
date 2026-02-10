@@ -887,6 +887,52 @@ clearButton.addEventListener('click', () => {
   loadState();
 });
 
+// Collapsible telegram container logic
+const telegramContainer = document.getElementById('telegramContainer');
+const telegramHideHandle = document.getElementById('telegramHideHandle');
+const telegramShowButton = document.getElementById('telegramShowButton');
+const popoverButton = telegramContainer.querySelector('.popoverButton');
+const inputsDiv = telegramContainer.querySelector('.inputs');
+const buttonsDiv = telegramContainer.querySelector('.buttons');
+
+function toggleTelegramContainer() {
+  telegramContainer.classList.toggle('collapsed');
+  const isCollapsed = telegramContainer.classList.contains('collapsed');
+  
+  // Toggle visibility of content
+  if (popoverButton) popoverButton.style.display = isCollapsed ? 'none' : 'block';
+  if (inputsDiv) inputsDiv.style.display = isCollapsed ? 'none' : 'flex';
+  if (buttonsDiv) buttonsDiv.style.display = isCollapsed ? 'none' : 'flex';
+  if (telegramShowButton) telegramShowButton.style.display = isCollapsed ? 'block' : 'none';
+  
+  localStorage.setItem('telegramContainerCollapsed', JSON.stringify(isCollapsed));
+}
+
+function loadTelegramContainerState() {
+  const savedState = localStorage.getItem('telegramContainerCollapsed');
+  if (savedState) {
+    const isCollapsed = JSON.parse(savedState);
+    if (isCollapsed) {
+      telegramContainer.classList.add('collapsed');
+      if (popoverButton) popoverButton.style.display = 'none';
+      if (inputsDiv) inputsDiv.style.display = 'none';
+      if (buttonsDiv) buttonsDiv.style.display = 'none';
+      if (telegramShowButton) telegramShowButton.style.display = 'block';
+    } else {
+      if (telegramShowButton) telegramShowButton.style.display = 'none';
+    }
+  } else {
+    // Default state: expanded
+    if (telegramShowButton) telegramShowButton.style.display = 'none';
+  }
+}
+
+telegramHideHandle.addEventListener('click', toggleTelegramContainer);
+telegramShowButton.addEventListener('click', toggleTelegramContainer);
+
+// Load initial state
+loadTelegramContainerState();
+
 class TaskBridge {
   constructor() {
     this.serverPort = 3456; // Fixed port for communication

@@ -174,7 +174,10 @@
         </ol>
     </div>
 
-    <div class="telegram-container">
+    <div class="telegram-container" id="telegramContainer">
+        <div class="telegram-hide-handle" id="telegramHideHandle">
+            <span class="handle-text">Hide</span>
+        </div>
         <button popovertarget="my-popover" class="popoverButton">Telegram notifications</button>
         <div class="inputs">
             <input type="text" placeholder="Bot token" onfocus="this.removeAttribute('readonly');"  />
@@ -188,6 +191,9 @@
             <button class="clear custom-tooltip" data-tooltip="Clear saved credentials">C</button>
         </div>
     </div>
+    <button class="telegram-show-button" id="telegramShowButton">
+        <span class="show-text">Show telegram notifications</span>
+    </button>
 
     <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>
