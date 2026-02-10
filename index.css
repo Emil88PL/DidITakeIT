@@ -67,6 +67,78 @@ body {
     min-width: 60px;
 }
 
+/* Star Quotes Toggle Styling */
+.star-quotes-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.star-quotes-toggle-wrapper label {
+    margin: 0;
+    white-space: nowrap;
+}
+
+#star-quotes-toggle {
+    min-width: 60px;
+}
+
+/* Star Quote Bubble */
+.star-quote-bubble {
+    position: fixed;
+    background: white;
+    color: black;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none;
+    transform: translate(-50%, -100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: bubbleFadeIn 0.3s ease-out;
+}
+
+.star-quote-bubble.fade-out {
+    animation: bubbleFadeOut 0.5s ease-out forwards;
+}
+
+/* Triangle pointer */
+.star-quote-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid white;
+}
+
+@keyframes bubbleFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -90%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -100%);
+    }
+}
+
+@keyframes bubbleFadeOut {
+    from {
+        opacity: 1;
+        transform: translate(-50%, -100%);
+    }
+    to {
+        opacity: 0;
+        transform: translate(-50%, -110%);
+    }
+}
+
 li {
     margin-bottom: 10px;
 }

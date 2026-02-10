@@ -1529,3 +1529,196 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// --- Star Quotes Feature ---
+const STAR_QUOTES = [
+  "You're doing great!",
+  "Keep shining!",
+  "Don't forget to hydrate!",
+  "Take a deep breath",
+  "Stay focused!",
+  "You're a star!",
+  "One step at a time",
+  "Believe in yourself",
+  "Progress, not perfection",
+  "You've got this!",
+  "Stay positive!",
+  "Keep pushing forward",
+  "Every moment counts",
+  "You're amazing!",
+  "Take breaks when needed",
+  "Stay curious",
+  "Dream big!",
+  "Make it happen",
+  "Trust the process",
+  "Small wins matter"
+];
+
+const STAR_QUOTES_ENABLED_KEY = 'starQuotesEnabled';
+const STAR_QUOTES_MIN_INTERVAL = 4000; // 4 seconds
+const STAR_QUOTES_MAX_INTERVAL = 8000; // 8 seconds
+
+let starQuotesInterval = null;
+let currentQuoteBubble = null;
+let currentQuoteStar = null;
+let quoteAnimationFrame = null;
+
+function loadStarQuotesState() {
+  const saved = localStorage.getItem(STAR_QUOTES_ENABLED_KEY);
+  return saved !== null ? saved === 'true' : true; // Default to ON
+}
+
+function saveStarQuotesState(enabled) {
+  localStorage.setItem(STAR_QUOTES_ENABLED_KEY, enabled.toString());
+}
+
+function updateStarQuotesToggleButton(button, enabled) {
+  button.textContent = enabled ? 'ON' : 'OFF';
+  if (enabled) {
+    button.classList.add('addButton');
+    button.classList.remove('deleteButton');
+  } else {
+    button.classList.add('deleteButton');
+    button.classList.remove('addButton');
+  }
+}
+
+function getRandomQuote() {
+  return STAR_QUOTES[Math.floor(Math.random() * STAR_QUOTES.length)];
+}
+
+function getRandomStar() {
+  const container = document.getElementById('stars-container');
+  if (!container || container.children.length === 0) return null;
+  const stars = container.querySelectorAll('.star');
+  return stars[Math.floor(Math.random() * stars.length)];
+}
+
+function updateQuotePosition() {
+  if (!currentQuoteBubble || !currentQuoteStar) return;
+  
+  const rect = currentQuoteStar.getBoundingClientRect();
+  currentQuoteBubble.style.left = (rect.left + rect.width / 2) + 'px';
+  currentQuoteBubble.style.top = (rect.top - 40) + 'px';
+  
+  quoteAnimationFrame = requestAnimationFrame(updateQuotePosition);
+}
+
+function showQuoteBubble() {
+  // Remove existing bubble
+  if (currentQuoteBubble) {
+    currentQuoteBubble.remove();
+    currentQuoteBubble = null;
+  }
+  
+  if (quoteAnimationFrame) {
+    cancelAnimationFrame(quoteAnimationFrame);
+    quoteAnimationFrame = null;
+  }
+  
+  const star = getRandomStar();
+  if (!star) return;
+  
+  const quote = getRandomQuote();
+  
+  // Create bubble element
+  const bubble = document.createElement('div');
+  bubble.className = 'star-quote-bubble';
+  bubble.textContent = quote;
+  
+  // Store star reference
+  currentQuoteStar = star;
+  
+  // Position bubble above the star
+  const rect = star.getBoundingClientRect();
+  bubble.style.left = (rect.left + rect.width / 2) + 'px';
+  bubble.style.top = (rect.top - 40) + 'px';
+  
+  document.body.appendChild(bubble);
+  currentQuoteBubble = bubble;
+  
+  // Start following the star
+  quoteAnimationFrame = requestAnimationFrame(updateQuotePosition);
+  
+  // Remove after animation (5 seconds total)
+  setTimeout(() => {
+    if (quoteAnimationFrame) {
+      cancelAnimationFrame(quoteAnimationFrame);
+      quoteAnimationFrame = null;
+    }
+    if (bubble && bubble.parentNode) {
+      bubble.classList.add('fade-out');
+      setTimeout(() => {
+        if (bubble && bubble.parentNode) {
+          bubble.remove();
+        }
+        if (currentQuoteBubble === bubble) {
+          currentQuoteBubble = null;
+          currentQuoteStar = null;
+        }
+      }, 500);
+    }
+  }, 4500);
+}
+
+function startStarQuotes() {
+  if (starQuotesInterval) {
+    clearTimeout(starQuotesInterval);
+  }
+  
+  function scheduleNext() {
+    const delay = Math.random() * (STAR_QUOTES_MAX_INTERVAL - STAR_QUOTES_MIN_INTERVAL) + STAR_QUOTES_MIN_INTERVAL;
+    starQuotesInterval = setTimeout(() => {
+      const enabled = loadStarQuotesState();
+      const starsEnabled = loadStarsState();
+      if (enabled && starsEnabled) {
+        showQuoteBubble();
+      }
+      scheduleNext();
+    }, delay);
+  }
+  
+  scheduleNext();
+}
+
+function stopStarQuotes() {
+  if (starQuotesInterval) {
+    clearTimeout(starQuotesInterval);
+    starQuotesInterval = null;
+  }
+  if (quoteAnimationFrame) {
+    cancelAnimationFrame(quoteAnimationFrame);
+    quoteAnimationFrame = null;
+  }
+  if (currentQuoteBubble) {
+    currentQuoteBubble.remove();
+    currentQuoteBubble = null;
+  }
+  currentQuoteStar = null;
+}
+
+// Initialize star quotes when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  const starQuotesToggleBtn = document.getElementById('star-quotes-toggle');
+  if (starQuotesToggleBtn) {
+    const enabled = loadStarQuotesState();
+    updateStarQuotesToggleButton(starQuotesToggleBtn, enabled);
+    
+    starQuotesToggleBtn.addEventListener('click', () => {
+      const newEnabled = starQuotesToggleBtn.textContent === 'OFF';
+      updateStarQuotesToggleButton(starQuotesToggleBtn, newEnabled);
+      saveStarQuotesState(newEnabled);
+      
+      if (newEnabled) {
+        startStarQuotes();
+      } else {
+        stopStarQuotes();
+      }
+    });
+  }
+  
+  // Start the quotes if enabled and stars are enabled
+  if (loadStarQuotesState() && loadStarsState()) {
+    startStarQuotes();
+  }
+});
