@@ -456,7 +456,7 @@ form#task-form input, #check-frequency {
     font-weight: bold;
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
-    text-transform: uppercase;
+    /*text-transform: uppercase;*/
     letter-spacing: 1px;
 }
 
