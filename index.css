@@ -443,6 +443,7 @@ form#task-form input, #check-frequency {
     transition: height 0.2s ease-in-out;
     margin: -20px -20px 10px -20px;
     width: calc(100% + 40px);
+    border-radius: 8px;
 }
 
 .telegram-hide-handle:hover {
@@ -453,7 +454,6 @@ form#task-form input, #check-frequency {
     color: white;
     font-size: 11px;
     font-weight: bold;
-
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
     text-transform: uppercase;
