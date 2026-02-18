@@ -2,6 +2,31 @@
 let overdueInterval;
 let dueTimeInterval;
 
+// Score for popped bubbles
+const SCORE_KEY = 'bubblePopScore';
+
+function loadScore() {
+  const saved = localStorage.getItem(SCORE_KEY);
+  return saved ? parseInt(saved, 10) : 0;
+}
+
+function saveScore(score) {
+  localStorage.setItem(SCORE_KEY, score.toString());
+}
+
+function updateScoreDisplay() {
+  const scoreEl = document.getElementById('score-value');
+  if (scoreEl) {
+    scoreEl.textContent = loadScore();
+  }
+}
+
+function incrementScore() {
+  const newScore = loadScore() + 1;
+  saveScore(newScore);
+  updateScoreDisplay();
+}
+
 // Toggle for change document title
 let titleBlinkInterval = null;
 
@@ -1650,6 +1675,35 @@ function updateQuotePosition() {
   quoteAnimationFrame = requestAnimationFrame(updateQuotePosition);
 }
 
+function createBubbleExplosion(bubble) {
+  const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#ff9f43'];
+  const rect = bubble.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const particleCount = 12;
+  
+  for (let i = 0; i < particleCount; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'bubble-particle';
+    
+    const angle = (i / particleCount) * Math.PI * 2;
+    const distance = 60 + Math.random() * 40;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    
+    particle.style.left = centerX + 'px';
+    particle.style.top = centerY + 'px';
+    particle.style.setProperty('--tx', tx + 'px');
+    particle.style.setProperty('--ty', ty + 'px');
+    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    particle.style.animationDelay = Math.random() * 0.1 + 's';
+    
+    document.body.appendChild(particle);
+    
+    setTimeout(() => particle.remove(), 600);
+  }
+}
+
 function showQuoteBubble() {
   // Remove existing bubble
   if (currentQuoteBubble) {
@@ -1686,8 +1740,36 @@ function showQuoteBubble() {
   // Start following the star
   quoteAnimationFrame = requestAnimationFrame(updateQuotePosition);
   
+  // Click handler for explosion
+  bubble.addEventListener('click', (e) => {
+    e.stopPropagation();
+    
+    // Cancel the auto-remove timeout
+    if (quoteAnimationFrame) {
+      cancelAnimationFrame(quoteAnimationFrame);
+      quoteAnimationFrame = null;
+    }
+    if (bubbleTimeout) {
+      clearTimeout(bubbleTimeout);
+      bubbleTimeout = null;
+    }
+    
+    // Create explosion particles
+    createBubbleExplosion(bubble);
+    
+    // Increment score
+    incrementScore();
+    
+    // Remove bubble
+    bubble.remove();
+    currentQuoteBubble = null;
+    currentQuoteStar = null;
+  });
+  
+  let bubbleTimeout;
+  
   // Remove after animation (5 seconds total)
-  setTimeout(() => {
+  bubbleTimeout = setTimeout(() => {
     if (quoteAnimationFrame) {
       cancelAnimationFrame(quoteAnimationFrame);
       quoteAnimationFrame = null;
@@ -1745,16 +1827,19 @@ function stopStarQuotes() {
 
 // Initialize star quotes when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+  // Load and display saved score
+  updateScoreDisplay();
+  
   const starQuotesToggleBtn = document.getElementById('star-quotes-toggle');
   if (starQuotesToggleBtn) {
     const enabled = loadStarQuotesState();
     updateStarQuotesToggleButton(starQuotesToggleBtn, enabled);
-    
+
     starQuotesToggleBtn.addEventListener('click', () => {
       const newEnabled = starQuotesToggleBtn.textContent === 'OFF';
       updateStarQuotesToggleButton(starQuotesToggleBtn, newEnabled);
       saveStarQuotesState(newEnabled);
-      
+
       if (newEnabled) {
         startStarQuotes();
       } else {
@@ -1762,7 +1847,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  
+
   // Start the quotes if enabled and stars are enabled
   if (loadStarQuotesState() && loadStarsState()) {
     startStarQuotes();

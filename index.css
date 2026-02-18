@@ -11,6 +11,17 @@ body {
     overflow-x: hidden;
 }
 
+/* Score Display */
+#score-display {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    z-index: 2000;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
 /* Floating Stars Background */
 .stars-container {
     position: fixed;
@@ -95,7 +106,7 @@ body {
     font-weight: 500;
     white-space: nowrap;
     z-index: 1000;
-    pointer-events: none;
+    cursor: pointer;
     transform: translate(-50%, -100%);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     animation: bubbleFadeIn 0.3s ease-out;
@@ -136,6 +147,28 @@ body {
     to {
         opacity: 0;
         transform: translate(-50%, -110%);
+    }
+}
+
+/* Explosion Particles */
+.bubble-particle {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1001;
+    animation: particleExplode 0.5s ease-out forwards;
+}
+
+@keyframes particleExplode {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) scale(0);
     }
 }
 
