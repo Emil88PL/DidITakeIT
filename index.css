@@ -695,7 +695,11 @@ input[type="range"] {
     align-items: center;
     gap: 6px;
     cursor: default;
+<<<<<<< Updated upstream
     top: 184px;
+=======
+    top: 243px;
+>>>>>>> Stashed changes
     left: 266px;
 }
 
@@ -760,7 +764,11 @@ input[type="range"] {
     align-items: center;
     gap: 6px;
     cursor: default;
+<<<<<<< Updated upstream
     top: 226px;
+=======
+    top: 288px;
+>>>>>>> Stashed changes
     left: 293px;
 }
 
