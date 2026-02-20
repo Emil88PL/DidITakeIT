@@ -768,3 +768,16 @@ input[type="range"] {
     opacity: 1;
     transform: translateX(0);
 }
+
+.clock-icon {
+    display: inline-block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clock-icon:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+}
