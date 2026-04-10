@@ -1874,6 +1874,12 @@ function initWhatsNewPopup() {
 
   if (!nextBtn || !popover) return;
 
+  // Restore checkbox state from localStorage
+  if (dontShowCheckbox) {
+    const dontShow = localStorage.getItem(WHATS_NEW_DONT_SHOW_KEY);
+    dontShowCheckbox.checked = dontShow === 'true';
+  }
+
   // Check if we should show the popup
   const shouldShow = checkShouldShowWhatsNew();
   if (shouldShow) {
@@ -1903,6 +1909,17 @@ function initWhatsNewPopup() {
 
   // Update button text on slide change
   updateNextButtonText();
+
+  // Save "do not show again" preference immediately when checkbox changes
+  if (dontShowCheckbox) {
+    dontShowCheckbox.addEventListener('change', () => {
+      if (dontShowCheckbox.checked) {
+        localStorage.setItem(WHATS_NEW_DONT_SHOW_KEY, 'true');
+      } else {
+        localStorage.removeItem(WHATS_NEW_DONT_SHOW_KEY);
+      }
+    });
+  }
 }
 
 function checkShouldShowWhatsNew() {
