@@ -1886,6 +1886,8 @@ function initWhatsNewPopup() {
     // Show popup after a short delay
     setTimeout(() => {
       popover.showPopover();
+      // Save the date immediately when showing, so users who don't complete slides still get date updated
+      localStorage.setItem(WHATS_NEW_STORAGE_KEY, WHATS_NEW_VERSION_DATE);
     }, 500);
   }
 
