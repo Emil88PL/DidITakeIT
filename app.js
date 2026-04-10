@@ -1852,4 +1852,131 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loadStarQuotesState() && loadStarsState()) {
     startStarQuotes();
   }
+
+  // Initialize What's New popup
+  initWhatsNewPopup();
 });
+
+// --- What's New Popup Functionality ---
+// Update this date when you add new features/changes to show the popup again
+const WHATS_NEW_VERSION_DATE = '2025-04-10';
+const WHATS_NEW_STORAGE_KEY = 'whatsNewLastShown';
+const WHATS_NEW_DONT_SHOW_KEY = 'whatsNewDontShow';
+
+let currentSlide = 1;
+const totalSlides = 5;
+
+function initWhatsNewPopup() {
+  const nextBtn = document.getElementById('whatsnew-next');
+  const dontShowCheckbox = document.getElementById('whatsnew-dontshow');
+  const dots = document.querySelectorAll('.slide-dots .dot');
+  const popover = document.getElementById('my-popover-whatsnew');
+
+  if (!nextBtn || !popover) return;
+
+  // Check if we should show the popup
+  const shouldShow = checkShouldShowWhatsNew();
+  if (shouldShow) {
+    // Show popup after a short delay
+    setTimeout(() => {
+      popover.showPopover();
+    }, 500);
+  }
+
+  // Next button click handler
+  nextBtn.addEventListener('click', () => {
+    if (currentSlide < totalSlides) {
+      goToSlide(currentSlide + 1);
+    } else {
+      // On last slide, close and save preference
+      closeWhatsNew();
+    }
+  });
+
+  // Dot navigation
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const slideNum = parseInt(dot.dataset.slide);
+      goToSlide(slideNum);
+    });
+  });
+
+  // Update button text on slide change
+  updateNextButtonText();
+}
+
+function checkShouldShowWhatsNew() {
+  const dontShow = localStorage.getItem(WHATS_NEW_DONT_SHOW_KEY);
+  const lastShownDate = localStorage.getItem(WHATS_NEW_STORAGE_KEY);
+
+  // If user checked "Don't show again", check if version date changed
+  if (dontShow === 'true') {
+    // If version date is different from last shown, show again
+    if (lastShownDate !== WHATS_NEW_VERSION_DATE) {
+      // Clear the don't show flag since there's new content
+      localStorage.removeItem(WHATS_NEW_DONT_SHOW_KEY);
+      return true;
+    }
+    return false;
+  }
+
+  // Always show if never shown or if version date changed
+  return true;
+}
+
+function goToSlide(slideNum) {
+  if (slideNum < 1 || slideNum > totalSlides) return;
+
+  // Hide current slide
+  const currentSlideEl = document.querySelector(`.whatsnew-slide[data-slide="${currentSlide}"]`);
+  if (currentSlideEl) {
+    currentSlideEl.classList.remove('active');
+  }
+
+  // Show new slide
+  const newSlideEl = document.querySelector(`.whatsnew-slide[data-slide="${slideNum}"]`);
+  if (newSlideEl) {
+    newSlideEl.classList.add('active');
+  }
+
+  // Update dots
+  document.querySelectorAll('.slide-dots .dot').forEach(dot => {
+    dot.classList.remove('active');
+    if (parseInt(dot.dataset.slide) === slideNum) {
+      dot.classList.add('active');
+    }
+  });
+
+  currentSlide = slideNum;
+  updateNextButtonText();
+}
+
+function updateNextButtonText() {
+  const nextBtn = document.getElementById('whatsnew-next');
+  if (nextBtn) {
+    nextBtn.textContent = currentSlide === totalSlides ? 'Finish' : 'Next';
+  }
+}
+
+function closeWhatsNew() {
+  const popover = document.getElementById('my-popover-whatsnew');
+  const dontShowCheckbox = document.getElementById('whatsnew-dontshow');
+
+  if (dontShowCheckbox && dontShowCheckbox.checked) {
+    localStorage.setItem(WHATS_NEW_DONT_SHOW_KEY, 'true');
+  } else {
+    localStorage.removeItem(WHATS_NEW_DONT_SHOW_KEY);
+  }
+
+  // Save the date when popup was shown
+  localStorage.setItem(WHATS_NEW_STORAGE_KEY, WHATS_NEW_VERSION_DATE);
+
+  if (popover) {
+    popover.hidePopover();
+  }
+
+  // Reset to first slide for next time
+  setTimeout(() => {
+    goToSlide(1);
+  }, 300);
+}

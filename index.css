@@ -781,3 +781,139 @@ input[type="range"] {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     transform: translateY(-3px);
 }
+
+/* What's New Popup Styles */
+.whatsnew-popover {
+    position: relative;
+    padding: 25px;
+    min-width: 400px;
+    max-width: 500px;
+    overflow: visible;
+}
+
+.whatsnew-content {
+    min-height: 350px;
+    position: relative;
+}
+
+.whatsnew-slide {
+    display: none;
+    animation: slideIn 0.3s ease-out;
+}
+
+.whatsnew-slide.active {
+    display: block;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.slide-image {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.slide-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.slide-placeholder {
+    font-size: 24px;
+    text-align: center;
+    padding: 20px;
+    display: none;
+}
+
+.slide-image img[src=""] + .slide-placeholder,
+.slide-image img[style*="display:none"] + .slide-placeholder,
+.slide-image img:not([src]) + .slide-placeholder {
+    display: block;
+}
+
+.slide-comment {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.slide-comment p {
+    margin: 0;
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+.whatsnew-footer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.slide-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.slide-dots .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.slide-dots .dot:hover {
+    transform: scale(1.2);
+}
+
+.slide-dots .dot.active {
+    background: #00b9fe;
+    transform: scale(1.2);
+}
+
+.whatsnew-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+#whatsnew-next {
+    padding: 10px 30px;
+    font-size: 14px;
+}
+
+.whatsnew-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.whatsnew-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}

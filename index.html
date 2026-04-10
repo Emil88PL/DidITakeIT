@@ -54,6 +54,7 @@
 
     <div>
         <button popovertarget="my-popover-settings" id="show-settings-button" class="addButton custom-tooltip" data-tooltip="Settings">Settings</button>
+        <button popovertarget="my-popover-whatsnew" id="show-whatsnew-button" class="addButton custom-tooltip" data-tooltip="What's New">What's New</button>
     </div>
 
     <div popover id="my-popover-settings" class="settings-popover">
@@ -122,6 +123,81 @@
             <label><input type="radio" name="pageTitle" value="marquee"> Marquee page title</label><br>
             <label><input type="radio" name="pageTitle" value="blinkingTitle"> Blinking page title</label><br>
             <label><input type="radio" name="pageTitle" value="default"> Default page title</label>
+        </div>
+    </div>
+
+    <div popover id="my-popover-whatsnew" class="whatsnew-popover">
+        <div class="popover-label">What's New</div>
+        <div class="whatsnew-content">
+            <!-- Slide 1 -->
+            <div class="whatsnew-slide active" data-slide="1">
+                <div class="slide-image">
+                    <img src="whatsnew/slide1.png" alt="Feature 1" onerror="this.style.display='none'">
+                    <div class="slide-placeholder">New Feature: Task Management</div>
+                </div>
+                <div class="slide-comment">
+                    <p>We've completely redesigned the task management system. Now you can organize your tasks more efficiently with presets and active day selection.</p>
+                </div>
+            </div>
+            <!-- Slide 2 -->
+            <div class="whatsnew-slide" data-slide="2">
+                <div class="slide-image">
+                    <img src="whatsnew/slide2.png" alt="Feature 2" onerror="this.style.display='none'">
+                    <div class="slide-placeholder">Telegram Notifications</div>
+                </div>
+                <div class="slide-comment">
+                    <p>Stay on top of your tasks with Telegram notifications. Get reminders directly to your phone when tasks become overdue.</p>
+                </div>
+            </div>
+            <!-- Slide 3 -->
+            <div class="whatsnew-slide" data-slide="3">
+                <div class="slide-image">
+                    <img src="whatsnew/slide3.png" alt="Feature 3" onerror="this.style.display='none'">
+                    <div class="slide-placeholder">Task Buddy AI</div>
+                </div>
+                <div class="slide-comment">
+                    <p>Connect Buddy to a local or cloud AI model to intelligently track your tasks.
+                        It can remind you what needs to be done and help you stay focused throughout the day.</p>
+                </div>
+            </div>
+            <!-- Slide 4 -->
+            <div class="whatsnew-slide" data-slide="4">
+                <div class="slide-image">
+                    <img src="whatsnew/slide4.png" alt="Feature 4" onerror="this.style.display='none'">
+                    <div class="slide-placeholder">Buddy in terminal</div>
+                </div>
+                <div class="slide-comment">
+                    <p>No need to switch back to your browser, manage your tasks directly from the terminal.
+                        Quickly create, update, or complete tasks without breaking your workflow.</p>
+                </div>
+            </div>
+            <!-- Slide 5 -->
+            <div class="whatsnew-slide" data-slide="5">
+                <div class="slide-image">
+                    <img src="whatsnew/slide5.png" alt="Feature 5" onerror="this.style.display='none'">
+                    <div class="slide-placeholder">A beautiful clock</div>
+                </div>
+                <div class="slide-comment">
+                    <p>A simple, beautiful clock designed for your extra screen.
+                        Perfect for keeping track of time while staying focused on your tasks.(hidden under the icon)</p>
+                </div>
+            </div>
+        </div>
+        <div class="whatsnew-footer">
+            <div class="slide-dots">
+                <span class="dot active" data-slide="1"></span>
+                <span class="dot" data-slide="2"></span>
+                <span class="dot" data-slide="3"></span>
+                <span class="dot" data-slide="4"></span>
+                <span class="dot" data-slide="5"></span>
+            </div>
+            <div class="whatsnew-actions">
+                <button id="whatsnew-next" class="addButton">Next</button>
+                <label class="whatsnew-checkbox">
+                    <input type="checkbox" id="whatsnew-dontshow">
+                    Don't show again
+                </label>
+            </div>
         </div>
     </div>
 
