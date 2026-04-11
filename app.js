@@ -1964,12 +1964,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- What's New Popup Functionality ---
 // Update this date when you add new features/changes to show the popup again
-const WHATS_NEW_VERSION_DATE = '2025-04-10';
+const WHATS_NEW_VERSION_DATE = '2025-04-11';
 const WHATS_NEW_STORAGE_KEY = 'whatsNewLastShown';
 const WHATS_NEW_DONT_SHOW_KEY = 'whatsNewDontShow';
 
 let currentSlide = 1;
-const totalSlides = 5;
+const totalSlides = 6;
 
 function initWhatsNewPopup() {
   const nextBtn = document.getElementById('whatsnew-next');
