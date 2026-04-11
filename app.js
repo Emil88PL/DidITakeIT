@@ -45,6 +45,9 @@ const greenPrimary = "#4CAF50";
 // Session (in-memory) credentials when user clicks “Use”
 let sessionTelegram = { botToken: null, chatId: null, toggle: "OFF" };
 
+// Telegram polling state: taskId -> { messageId, intervalId, lastUpdateId }
+let telegramPollingState = {};
+
 // Exponential backoff delays for Telegram notifications (in minutes): 2, 4, 8, 16, 32, 64, 128, then 256
 const TELEGRAM_BACKOFF_DELAYS = [2, 4, 8, 16, 32, 64, 128, 256];
 
@@ -400,8 +403,8 @@ function toggleTask(id, checked) {
     task.checked = checked;
     if (checked) {
       task.alarmTriggered = false;
-      // Clear Telegram notification state when task is completed
-      clearTaskNotificationState(task.id);
+      clearTaskNotificationState(id);
+      stopTelegramPolling(id);
     }
     saveTasks(tasks);
     renderTasks();
@@ -516,11 +519,113 @@ function sendTelegramMessage(allOverdueTasks, triggeringTaskId) {
       .then(data => {
         if (!data.ok) {
           console.error("Failed to send Telegram message. Description:", data.description);
+          return;
         }
+        // Start polling for DONE replies for this task
+        const messageId = data.result.message_id;
+        startTelegramPolling(triggeringTaskId, botToken, chatId, messageId);
       })
       .catch(error => {
         console.error("Error sending Telegram message (fetch failed):", error);
       });
+}
+
+// Start polling for DONE replies to a specific Telegram message
+function startTelegramPolling(taskId, botToken, chatId, messageId) {
+  // Don't start if already polling for this task
+  if (telegramPollingState[taskId]) {
+    return;
+  }
+
+  console.log(`Starting Telegram polling for task ${taskId}, message ${messageId}`);
+
+  // Poll every 30 seconds
+  const intervalId = setInterval(() => {
+    pollTelegramForDone(taskId, botToken, chatId, messageId);
+  }, 30000);
+
+  telegramPollingState[taskId] = {
+    messageId: messageId,
+    intervalId: intervalId,
+    lastUpdateId: 0
+  };
+}
+
+// Poll Telegram for DONE replies
+function pollTelegramForDone(taskId, botToken, chatId, messageId) {
+  const url = `https://api.telegram.org/bot${botToken}/getUpdates?chat_id=${chatId}`;
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.ok) {
+        console.error("Failed to get Telegram updates:", data.description);
+        return;
+      }
+
+      const updates = data.result;
+      const pollingState = telegramPollingState[taskId];
+      if (!pollingState) return;
+
+      // Process new updates
+      for (const update of updates) {
+        if (update.update_id <= pollingState.lastUpdateId) continue;
+
+        // Check if this is a reply to our message
+        if (update.message && update.message.reply_to_message) {
+          const replyToMsg = update.message.reply_to_message;
+          if (replyToMsg.message_id === messageId) {
+            const text = update.message.text || "";
+            if (text.toLowerCase() === "done") {
+              // Mark task as complete
+              console.log(`Received DONE for task ${taskId} from Telegram`);
+              markTaskCompleteFromTelegram(taskId);
+              stopTelegramPolling(taskId);
+              break;
+            }
+          }
+        }
+
+        pollingState.lastUpdateId = update.update_id;
+      }
+    })
+    .catch(error => {
+      console.error("Error polling Telegram:", error);
+    });
+}
+
+// Mark task complete from Telegram DONE command
+function markTaskCompleteFromTelegram(taskId) {
+  const tasks = getTasks();
+  const task = tasks.find(t => t.id === taskId);
+  if (task && !task.checked) {
+    task.checked = true;
+    task.alarmTriggered = false;
+    saveTasks(tasks);
+    renderTasks();
+
+    // Stop title blinking if no more overdue
+    const overdueTasks = tasks.filter(t => 
+      isTaskActiveToday(t) && !t.checked && new Date(t.dueTime) <= new Date()
+    );
+    if (overdueTasks.length === 0 && titleBlinkInterval) {
+      clearInterval(titleBlinkInterval);
+      titleBlinkInterval = null;
+      document.title = 'Did I take it?';
+    }
+  }
+  // Clear notification state
+  clearTaskNotificationState(taskId);
+}
+
+// Stop polling for a task (when completed or manually checked)
+function stopTelegramPolling(taskId) {
+  const state = telegramPollingState[taskId];
+  if (state) {
+    console.log(`Stopping Telegram polling for task ${taskId}`);
+    clearInterval(state.intervalId);
+    delete telegramPollingState[taskId];
+  }
 }
 
 // Check for overdue tasks and trigger the alarm and Telegram message if needed
