@@ -2104,3 +2104,32 @@ function closeWhatsNew() {
     goToSlide(1);
   }, 300);
 }
+
+// Check connection
+document.addEventListener('DOMContentLoaded', () => {
+  console.log("Loaded");
+  const toast  = document.getElementById('connectivity-toast');
+  const iconEl = toast.querySelector('.connectivity-toast__icon');
+  const textEl = toast.querySelector('.connectivity-toast__text');
+  let hideTimer = null;
+
+  function show(text, status) {
+    console.log("TOAST:", text, status);
+
+    toast.dataset.state = status;
+    iconEl.textContent  = status === 'offline' ? '✕' : '✓';
+    textEl.textContent  = text;
+
+    toast.classList.add('show');
+
+    if (hideTimer) clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  window.addEventListener('offline', () => show("You are Offline...", "offline"));
+  window.addEventListener('online',  () => show("Back Online!", "online"));
+
+  window.testToast = (status = 'offline') =>
+      show(status === 'offline' ? "You are Offline..." : "Back Online!", status);
+
+});
