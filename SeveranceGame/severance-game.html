@@ -139,6 +139,40 @@
       font-size: 14px;
       outline: none;
     }
+    .setting-row button {
+      width: 100%;
+      background: #071018;
+      color: #d6f5f2;
+      border: 1px solid #244b49;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .setting-row button.primary {
+      border-color: #4ecdc4;
+      color: #4ecdc4;
+    }
+    .setting-row button.primary.active {
+      background: rgba(78, 205, 196, 0.08);
+    }
+    .range-wrap {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+    }
+    .range-wrap input[type="range"] {
+      flex: 1;
+      min-width: 0;
+      accent-color: #4ecdc4;
+    }
+    .range-value {
+      min-width: 44px;
+      text-align: right;
+      font-size: 13px;
+      color: #89c9c4;
+    }
     .settings-help {
       margin-top: 12px;
       padding: 10px 12px;
@@ -397,6 +431,17 @@
       <label for="collect-input">Collect when scary</label>
       <input id="collect-input" type="number" min="1" max="5" step="1">
     </div>
+    <div class="setting-row">
+      <label>Music</label>
+      <button id="music-toggle" type="button" class="primary">Stop music</button>
+    </div>
+    <div class="setting-row">
+      <label for="music-volume-input">Music volume</label>
+      <div class="range-wrap">
+        <input id="music-volume-input" type="range" min="0" max="100" step="1">
+        <span class="range-value" id="music-volume-value">72%</span>
+      </div>
+    </div>
     <div class="settings-help" id="collection-help"></div>
     <div class="settings-actions">
       <button id="settings-cancel" type="button">Cancel</button>
@@ -424,6 +469,9 @@
   const scaryInput = document.getElementById('scary-input');
   const scaryColorInput = document.getElementById('scary-color-input');
   const collectInput = document.getElementById('collect-input');
+  const musicToggle = document.getElementById('music-toggle');
+  const musicVolumeInput = document.getElementById('music-volume-input');
+  const musicVolumeValue = document.getElementById('music-volume-value');
   const settingsCancel = document.getElementById('settings-cancel');
   const settingsSave = document.getElementById('settings-save');
   const collectionHelp = document.getElementById('collection-help');
@@ -435,10 +483,11 @@
   const GRID_JITTER = 1;
   const HOVER_RADIUS_SQ = HOVER_RADIUS * HOVER_RADIUS;
   const CONNECT_RADIUS_SQ = (HOVER_RADIUS * 1.5) * (HOVER_RADIUS * 1.5);
-  const DEFAULT_SETTINGS = { rows: 15, cols: 30, gap: 1, scary: 47, scaryColor: '#5ef0e8', collect: 4 };
+  const DEFAULT_SETTINGS = { rows: 15, cols: 30, gap: 1, scary: 47, scaryColor: '#5ef0e8', collect: 4, musicOn: true, musicVolume: 72 };
   const SETTINGS_KEY = 'macrodata-settings-v1';
   const PROFILE_PREFIX = 'macrodata-profile-v1:';
   const LEGACY_APP_STATE_KEY = 'macrodata-app-state-v1';
+  const CURRENT_EMPLOYEE_KEY = 'macrodata-current-employee-v1';
   const DEFAULT_BIN_COUNTS = [0, 0, 0, 0, 0];
 
   let nums = [];
@@ -457,6 +506,9 @@
   let settings = persisted.settings;
   round = persisted.round;
   binCounts = persisted.binCounts;
+  const themeAudio = new Audio('sound/Theme.mp3');
+  themeAudio.loop = true;
+  themeAudio.preload = 'auto';
   let floatTick = 0;
   let floatTimer = null;
   let timeTimer = null;
@@ -482,6 +534,10 @@
     return /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
   }
 
+  function clampBool(value, fallback) {
+    return typeof value === 'boolean' ? value : fallback;
+  }
+
   function normalizeName(name) {
     return String(name || '').trim();
   }
@@ -495,24 +551,35 @@
     return value.map(v => clampInt(v, 0, BIN_CAPACITY, 0));
   }
 
+  function normalizeSettings(value) {
+    const parsedSettings = value || {};
+    return {
+      rows: clampInt(parsedSettings.rows, 1, 60, DEFAULT_SETTINGS.rows),
+      cols: clampInt(parsedSettings.cols, 1, 80, DEFAULT_SETTINGS.cols),
+      gap: clampInt(parsedSettings.gap, 0, 60, DEFAULT_SETTINGS.gap),
+      scary: clampInt(parsedSettings.scary, 1, 400, DEFAULT_SETTINGS.scary),
+      scaryColor: clampColor(parsedSettings.scaryColor, DEFAULT_SETTINGS.scaryColor),
+      collect: clampInt(parsedSettings.collect, 1, 5, DEFAULT_SETTINGS.collect),
+      musicOn: clampBool(parsedSettings.musicOn, DEFAULT_SETTINGS.musicOn),
+      musicVolume: clampInt(parsedSettings.musicVolume, 0, 100, DEFAULT_SETTINGS.musicVolume)
+    };
+  }
+
   function loadAppState() {
     try {
+      const currentName = normalizeName(localStorage.getItem(CURRENT_EMPLOYEE_KEY));
+      if (currentName) {
+        return loadProfileByName(currentName);
+      }
+
       const raw = localStorage.getItem(LEGACY_APP_STATE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         const legacyName = normalizeName(parsed.employeeName);
         if (legacyName) {
-          const parsedSettings = parsed.settings || {};
           return {
             employeeName: legacyName,
-            settings: {
-              rows: clampInt(parsedSettings.rows, 1, 60, DEFAULT_SETTINGS.rows),
-              cols: clampInt(parsedSettings.cols, 1, 80, DEFAULT_SETTINGS.cols),
-              gap: clampInt(parsedSettings.gap, 0, 60, DEFAULT_SETTINGS.gap),
-              scary: clampInt(parsedSettings.scary, 1, 400, DEFAULT_SETTINGS.scary),
-              scaryColor: clampColor(parsedSettings.scaryColor, DEFAULT_SETTINGS.scaryColor),
-              collect: clampInt(parsedSettings.collect, 1, 5, DEFAULT_SETTINGS.collect)
-            },
+            settings: normalizeSettings(parsed.settings),
             round: clampInt(parsed.round, 1, 9999, 1),
             binCounts: normalizeBinCounts(parsed.binCounts)
           };
@@ -536,27 +603,21 @@
       const raw = localStorage.getItem(SETTINGS_KEY);
       if (!raw) return { ...DEFAULT_SETTINGS };
       const parsed = JSON.parse(raw);
-      return {
-        rows: clampInt(parsed.rows, 1, 60, DEFAULT_SETTINGS.rows),
-        cols: clampInt(parsed.cols, 1, 80, DEFAULT_SETTINGS.cols),
-        gap: clampInt(parsed.gap, 0, 60, DEFAULT_SETTINGS.gap),
-        scary: clampInt(parsed.scary, 1, 400, DEFAULT_SETTINGS.scary),
-        scaryColor: clampColor(parsed.scaryColor, DEFAULT_SETTINGS.scaryColor),
-        collect: clampInt(parsed.collect, 1, 5, DEFAULT_SETTINGS.collect)
-      };
+      return normalizeSettings(parsed);
     } catch {
       return { ...DEFAULT_SETTINGS };
     }
   }
 
   function saveSettings(nextSettings) {
-    settings = nextSettings;
+    settings = normalizeSettings(nextSettings);
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     saveAppState();
   }
 
   function saveAppState() {
     if (!employeeName) return;
+    localStorage.setItem(CURRENT_EMPLOYEE_KEY, employeeName);
     localStorage.setItem(profileKeyForName(employeeName), JSON.stringify({
       employeeName,
       settings,
@@ -581,17 +642,9 @@
       const raw = localStorage.getItem(key);
       if (raw) {
         const parsed = JSON.parse(raw);
-        const parsedSettings = parsed.settings || {};
         return {
           employeeName: normalizedName,
-          settings: {
-            rows: clampInt(parsedSettings.rows, 1, 60, DEFAULT_SETTINGS.rows),
-            cols: clampInt(parsedSettings.cols, 1, 80, DEFAULT_SETTINGS.cols),
-            gap: clampInt(parsedSettings.gap, 0, 60, DEFAULT_SETTINGS.gap),
-            scary: clampInt(parsedSettings.scary, 1, 400, DEFAULT_SETTINGS.scary),
-            scaryColor: clampColor(parsedSettings.scaryColor, DEFAULT_SETTINGS.scaryColor),
-            collect: clampInt(parsedSettings.collect, 1, 5, DEFAULT_SETTINGS.collect)
-          },
+          settings: normalizeSettings(parsed.settings),
           round: clampInt(parsed.round, 1, 9999, 1),
           binCounts: normalizeBinCounts(parsed.binCounts)
         };
@@ -601,17 +654,9 @@
       if (legacyRaw) {
         const parsed = JSON.parse(legacyRaw);
         if (normalizeName(parsed.employeeName).toLowerCase() === normalizedName.toLowerCase()) {
-          const parsedSettings = parsed.settings || {};
           const profile = {
             employeeName: normalizedName,
-            settings: {
-              rows: clampInt(parsedSettings.rows, 1, 60, DEFAULT_SETTINGS.rows),
-              cols: clampInt(parsedSettings.cols, 1, 80, DEFAULT_SETTINGS.cols),
-              gap: clampInt(parsedSettings.gap, 0, 60, DEFAULT_SETTINGS.gap),
-              scary: clampInt(parsedSettings.scary, 1, 400, DEFAULT_SETTINGS.scary),
-              scaryColor: clampColor(parsedSettings.scaryColor, DEFAULT_SETTINGS.scaryColor),
-              collect: clampInt(parsedSettings.collect, 1, 5, DEFAULT_SETTINGS.collect)
-            },
+            settings: normalizeSettings(parsed.settings),
             round: clampInt(parsed.round, 1, 9999, 1),
             binCounts: normalizeBinCounts(parsed.binCounts)
           };
@@ -641,6 +686,35 @@
     topTime.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     topFill.textContent = getFillPct() + '%';
     roundDisplay.textContent = 'ROTATION ' + String(round).padStart(3, '0');
+  }
+
+  function updateMusicUI() {
+    musicToggle.textContent = settings.musicOn ? 'Stop music' : 'Play music';
+    musicToggle.classList.toggle('active', settings.musicOn);
+    musicVolumeInput.value = settings.musicVolume;
+    musicVolumeValue.textContent = settings.musicVolume + '%';
+    themeAudio.volume = settings.musicVolume / 100;
+  }
+
+  function syncMusicPlayback() {
+    updateMusicUI();
+    if (settings.musicOn) {
+      const playPromise = themeAudio.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {});
+      }
+    } else {
+      themeAudio.pause();
+      themeAudio.currentTime = 0;
+    }
+  }
+
+  function resumeMusicOnGesture() {
+    if (!settings.musicOn || !themeAudio.paused) return;
+    const playPromise = themeAudio.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {});
+    }
   }
 
   function startTopClock() {
@@ -679,6 +753,7 @@
     binCounts = nextProfile.binCounts;
     saveAppState();
     updateTopBar();
+    syncMusicPlayback();
     closeLogin();
     init();
   }
@@ -704,6 +779,7 @@
     scaryInput.value = settings.scary;
     scaryColorInput.value = settings.scaryColor;
     collectInput.value = settings.collect;
+    updateMusicUI();
     collectionHelp.textContent = `Collection rule: the game randomly marks ${settings.scary} numbers as scary each round. If the scary numbers under your cursor form a connected group of at least ${settings.collect}, clicking collects that group into the least-filled bin.`;
     settingsBackdrop.classList.add('open');
     settingsBackdrop.setAttribute('aria-hidden', 'false');
@@ -718,6 +794,7 @@
     fieldW = field.clientWidth;
     fieldH = field.clientHeight;
     document.documentElement.style.setProperty('--scary-color', settings.scaryColor);
+    themeAudio.volume = settings.musicVolume / 100;
     if (rotationTimer) {
       clearTimeout(rotationTimer);
       rotationTimer = null;
@@ -1021,6 +1098,16 @@
     if (e.target === settingsBackdrop) closeSettings();
   });
   settingsCancel.addEventListener('click', closeSettings);
+  musicToggle.addEventListener('click', () => {
+    settings.musicOn = !settings.musicOn;
+    saveSettings({ ...settings });
+    syncMusicPlayback();
+  });
+  musicVolumeInput.addEventListener('input', () => {
+    settings.musicVolume = clampInt(musicVolumeInput.value, 0, 100, DEFAULT_SETTINGS.musicVolume);
+    saveSettings({ ...settings });
+    updateMusicUI();
+  });
   settingsSave.addEventListener('click', () => {
     const nextSettings = {
       rows: clampInt(rowsInput.value, 1, 60, DEFAULT_SETTINGS.rows),
@@ -1028,7 +1115,9 @@
       gap: clampInt(gapInput.value, 0, 60, DEFAULT_SETTINGS.gap),
       scary: clampInt(scaryInput.value, 1, 400, DEFAULT_SETTINGS.scary),
       scaryColor: clampColor(scaryColorInput.value, DEFAULT_SETTINGS.scaryColor),
-      collect: clampInt(collectInput.value, 1, 5, DEFAULT_SETTINGS.collect)
+      collect: clampInt(collectInput.value, 1, 5, DEFAULT_SETTINGS.collect),
+      musicOn: settings.musicOn,
+      musicVolume: settings.musicVolume
     };
     saveSettings(nextSettings);
     closeSettings();
@@ -1052,6 +1141,7 @@
     init();
     startTopClock();
     updateTopBar();
+    syncMusicPlayback();
     if (!employeeName) {
       openLogin();
     } else {
@@ -1059,6 +1149,7 @@
     }
   });
   window.addEventListener('resize', init);
+  window.addEventListener('pointerdown', resumeMusicOnGesture, { once: true });
 </script>
 </body>
 </html>
