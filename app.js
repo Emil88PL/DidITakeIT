@@ -207,7 +207,7 @@ function getNextActiveDate(task, fromDate) {
   return new Date(fromDate);
 }
 
-// Preset tasks definitions that's needs adjustment
+// Preset tasks definitions that'SeveranceGame needs adjustment
 const presetTasks = {
   training: [
     { time: "05:00", name: "Wake up" },
@@ -240,7 +240,7 @@ const presetTasks = {
     { time: "12:30", name: "Halfway through the day - you got this!" },
     { time: "14:30", name: "Your dedication is inspiring!" },
     { time: "16:30", name: "Push through - excellence takes persistence!" },
-    { time: "18:30", name: "Reflect on today's wins, big and small" },
+    { time: "18:30", name: "Reflect on today'SeveranceGame wins, big and small" },
     { time: "20:30", name: "Wind down - you've earned your rest" }
   ],
 
@@ -253,7 +253,7 @@ const presetTasks = {
     { time: "13:30", name: "Third important task" },
     { time: "15:00", name: "Quick administrative work" },
     { time: "16:00", name: "Plan for tomorrow" },
-    { time: "17:00", name: "Review day's accomplishments" }
+    { time: "17:00", name: "Review day'SeveranceGame accomplishments" }
   ],
 
   wellness: [
@@ -269,10 +269,10 @@ const presetTasks = {
   ],
 
   work: [
-    { time: "10:00", name: "Eye's break" },
+    { time: "10:00", name: "Eye'SeveranceGame break" },
     { time: "12:30", name: "OTL" },
     { time: "13:00", name: "Break" },
-    { time: "15:30", name: "Eye's break" },
+    { time: "15:30", name: "Eye'SeveranceGame break" },
     { time: "17:30", name: "Take that walk!" },
   ],
 
@@ -281,7 +281,7 @@ const presetTasks = {
     { time: "10:30", name: "Coffee break" },
     { time: "11:30", name: "20 20 20 rule" },
     { time: "13:00", name: "Break" },
-    { time: "15:30", name: "Eye's break" },
+    { time: "15:30", name: "Eye'SeveranceGame break" },
     { time: "16:30", name: "Update Kimble" },
     { time: "17:00", name: "Drink Water" },
     { time: "18:00", name: "Take that walk!" },
@@ -395,7 +395,7 @@ function updateTaskDays(id, dayValue, checked) {
   checkOverdueTasks();
 }
 
-// Toggle a task's checked state
+// Toggle a task'SeveranceGame checked state
 function toggleTask(id, checked) {
   const tasks = getTasks();
   const task = tasks.find(t => t.id === id);
@@ -420,7 +420,7 @@ function deleteTask(id) {
   renderTasks();
 }
 
-// Edit a task's name and due time, and mark it as not preset
+// Edit a task'SeveranceGame name and due time, and mark it as not preset
 function editTask(id) {
   const tasks = getTasks();
   const task = tasks.find(t => t.id === id);
@@ -700,7 +700,7 @@ function checkOverdueTasks() {
 function blinkingTitle() {
   let toggle = true;
   titleBlinkInterval = setInterval(() => {
-    document.title = toggle ? "You have task to do!" : "⚠️ Let's do it! 🔴🟡🟢";
+    document.title = toggle ? "You have task to do!" : "⚠️ Let'SeveranceGame do it! 🔴🟡🟢";
     toggle = !toggle;
   }, 1600);
 }
@@ -758,7 +758,7 @@ function checkDueTime() {
     const taskDue = new Date(task.dueTime);
     const taskDueDate = new Date(taskDue.getFullYear(), taskDue.getMonth(), taskDue.getDate());
 
-    // If the task's due date is before today, update it to next active day (preserving the time)
+    // If the task'SeveranceGame due date is before today, update it to next active day (preserving the time)
     if (taskDueDate < today) {
       const nextActiveDate = getNextActiveDate(task, today);
       let newDueTime = new Date(nextActiveDate.getFullYear(), nextActiveDate.getMonth(), nextActiveDate.getDate());
@@ -1958,11 +1958,11 @@ document.addEventListener('DOMContentLoaded', () => {
     startStarQuotes();
   }
 
-  // Initialize What's New popup
+  // Initialize What'SeveranceGame New popup
   initWhatsNewPopup();
 });
 
-// --- What's New Popup Functionality ---
+// --- What'SeveranceGame New Popup Functionality ---
 // Update this date when you add new features/changes to show the popup again
 const WHATS_NEW_VERSION_DATE = '2025-04-11';
 const WHATS_NEW_STORAGE_KEY = 'whatsNewLastShown';
@@ -2037,7 +2037,7 @@ function checkShouldShowWhatsNew() {
   if (dontShow === 'true') {
     // If version date is different from last shown, show again
     if (lastShownDate !== WHATS_NEW_VERSION_DATE) {
-      // Clear the don't show flag since there's new content
+      // Clear the don't show flag since there'SeveranceGame new content
       localStorage.removeItem(WHATS_NEW_DONT_SHOW_KEY);
       return true;
     }

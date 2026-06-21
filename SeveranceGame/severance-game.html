@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Macrodata Refinement - Lumon Industries</title>
+  <link rel="icon" type="image/x-icon" href="icon.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #050e14;
+      font-family: 'Share Tech Mono', monospace;
+      color: #4ecdc4;
+      overflow: hidden;
+      width: 100%;
+      height: 100vh;
+      cursor: default;
+      user-select: none;
+    }
+    #field {
+      position: absolute;
+      top: 24px; left: 0;
+      width: 100%;
+      bottom: 110px;
+      overflow: hidden;
+    }
+    .num {
+      position: absolute;
+      color: #3bbdb5;
+      font-family: 'Share Tech Mono', monospace;
+      font-weight: normal;
+      pointer-events: none;
+      transform-origin: center center;
+    }
+    .num.floating {
+      transition: transform 0.18s linear, left 0.18s linear, top 0.18s linear, font-size 0.18s linear;
+      will-change: transform, left, top;
+    }
+    .num.scary {
+      color: var(--scary-color, #5ef0e8);
+      text-shadow: 0 0 10px rgba(94,240,232,0.35);
+      animation: scaryPulse 0.85s ease-in-out infinite;
+    }
+    .num.captured { opacity: 0.15; color: #1a6060; }
+    .num.collecting {
+      z-index: 20;
+      pointer-events: none;
+      transition: left 0.35s ease, top 0.35s ease, transform 0.35s ease, opacity 0.35s ease, font-size 0.35s ease;
+    }
+    .num.flash-success { color: #ffffff; opacity: 1; }
+    @keyframes scaryPulse {
+      0%, 100% { filter: brightness(0.95); }
+      50% { filter: brightness(1.25); }
+    }
+    #top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 24px;
+      background: #040c11;
+      border-bottom: 1px solid #1a4040;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 11px;
+      color: #2a6060;
+      letter-spacing: 1px;
+      z-index: 15;
+    }
+    #top-name { justify-self: start; color: #7dbdb7; }
+    #top-name { cursor: pointer; }
+    #top-center { justify-self: center; display: flex; gap: 12px; align-items: center; }
+    #top-time { color: #4ecdc4; }
+    #top-fill { color: #89c9c4; }
+    #top-settings-btn {
+      justify-self: end;
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-bottom: 1px solid #1a4040;
+      background: rgba(6, 15, 22, 0.92);
+      color: #4ecdc4;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 22px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: none;
+    }
+    #top-settings-btn:hover { color: #7ff2eb; border-bottom-color: #4ecdc4; }
+    #gear-btn {
+      display: none;
+    }
+    #settings-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 7, 11, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+    #settings-backdrop.open { display: flex; }
+    #settings-panel {
+      width: min(520px, calc(100vw - 24px));
+      background: linear-gradient(180deg, #08131b 0%, #060f16 100%);
+      border: 1px solid #234b4a;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      padding: 18px 18px 16px;
+      color: #d6f5f2;
+    }
+    #settings-panel h2 {
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: #4ecdc4;
+      margin-bottom: 14px;
+    }
+    .setting-row {
+      display: grid;
+      grid-template-columns: 1fr 120px;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .setting-row label {
+      font-size: 12px;
+      color: #89c9c4;
+      letter-spacing: 1px;
+    }
+    .setting-row input {
+      width: 100%;
+      background: #02080d;
+      color: #d6f5f2;
+      border: 1px solid #214646;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    .settings-help {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px solid #193b3a;
+      background: rgba(4, 12, 17, 0.78);
+      color: #8fb7b3;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .settings-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .settings-actions button {
+      border: 1px solid #244b49;
+      background: #071018;
+      color: #d6f5f2;
+      padding: 8px 12px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .settings-actions button.primary {
+      border-color: #4ecdc4;
+      color: #4ecdc4;
+    }
+    #login-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 7, 11, 0.86);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    #login-backdrop.open { display: flex; }
+    #login-panel {
+      width: min(420px, calc(100vw - 24px));
+      background: linear-gradient(180deg, #08131b 0%, #060f16 100%);
+      border: 1px solid #234b4a;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      padding: 18px;
+      color: #d6f5f2;
+    }
+    #login-panel h2 {
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: #4ecdc4;
+      margin-bottom: 14px;
+    }
+    #login-panel .setting-row { grid-template-columns: 1fr; }
+    #login-panel input {
+      width: 100%;
+      background: #02080d;
+      color: #d6f5f2;
+      border: 1px solid #214646;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    #bins {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 90px;
+      background: #060f16;
+      border-top: 1px solid #1a4040;
+      display: flex;
+      align-items: stretch;
+    }
+    .bin-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #1a4040;
+      position: relative;
+      overflow: hidden;
+      transform-origin: center center;
+      transition: filter 0.18s ease;
+    }
+    .bin-section::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(10,24,30,0.96) 0%, rgba(4,12,17,0.98) 100%);
+      border-right: 1px solid #1a4040;
+      transform-origin: left center;
+      transition: transform 0.22s ease, opacity 0.22s ease;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .bin-section::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(10,24,30,0.96) 0%, rgba(4,12,17,0.98) 100%);
+      border-left: 1px solid #1a4040;
+      transform-origin: right center;
+      transition: transform 0.22s ease, opacity 0.22s ease;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .bin-section.collecting {
+      filter: drop-shadow(0 0 10px rgba(78,205,196,0.18));
+    }
+    .bin-section.collecting::before {
+      transform: translateX(-100%);
+      opacity: 0.8;
+    }
+    .bin-section.collecting::after {
+      transform: translateX(100%);
+      opacity: 0.8;
+    }
+    .bin-section:last-child { border-right: none; }
+    .bin-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px 4px;
+      border-bottom: 1px solid #1a4040;
+      position: relative;
+      z-index: 2;
+    }
+    .bin-label { font-size: 14px; color: #4ecdc4; letter-spacing: 2px; }
+    .bin-pct-text { font-size: 12px; color: #2a8a84; }
+    .bin-bar-wrap { flex: 1; background: #060f16; position: relative; overflow: hidden; z-index: 2; }
+    .bin-bar-fill {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: #1a5c58;
+      transition: height 0.4s ease;
+    }
+    .bin-bar-fill.complete { background: #4ecdc4; }
+    #status-bar {
+      position: absolute;
+      bottom: 90px;
+      left: 0; right: 0;
+      height: 20px;
+      background: #040c11;
+      border-top: 1px solid #1a4040;
+      border-bottom: 1px solid #0a2828;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      font-size: 11px;
+      color: #2a6060;
+      letter-spacing: 1px;
+    }
+    #hover-ring {
+      display: none;
+    }
+    #message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 22px;
+      color: #4ecdc4;
+      letter-spacing: 6px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 20;
+      transition: opacity 0.3s;
+      text-shadow: 0 0 20px rgba(78,205,196,0.6);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+<div id="top-bar">
+  <span id="top-name">EMPLOYEE</span>
+  <div id="top-center">
+    <span id="top-time">00:00</span>
+    <span id="top-fill">0%</span>
+  </div>
+  <button id="top-settings-btn" aria-label="Open settings">&#9881;</button>
+</div>
+<div id="field"></div>
+<button id="gear-btn" aria-label="Open settings">⚙</button>
+<div id="status-bar">
+  <span id="addr-left">0x013788 : 0x09DC81</span>
+  <span id="round-display">ROTATION 001</span>
+  <span id="addr-right">0x013762 : 0x09DC89</span>
+</div>
+
+<div id="bins">
+  <div class="bin-section">
+    <div class="bin-top"><span class="bin-label">O1</span><span class="bin-pct-text" id="pct0">0%</span></div>
+    <div class="bin-bar-wrap"><div class="bin-bar-fill" id="bar0" style="height:0%"></div></div>
+  </div>
+  <div class="bin-section">
+    <div class="bin-top"><span class="bin-label">O2</span><span class="bin-pct-text" id="pct1">0%</span></div>
+    <div class="bin-bar-wrap"><div class="bin-bar-fill" id="bar1" style="height:0%"></div></div>
+  </div>
+  <div class="bin-section">
+    <div class="bin-top"><span class="bin-label">O3</span><span class="bin-pct-text" id="pct2">0%</span></div>
+    <div class="bin-bar-wrap"><div class="bin-bar-fill" id="bar2" style="height:0%"></div></div>
+  </div>
+  <div class="bin-section">
+    <div class="bin-top"><span class="bin-label">O4</span><span class="bin-pct-text" id="pct3">0%</span></div>
+    <div class="bin-bar-wrap"><div class="bin-bar-fill" id="bar3" style="height:0%"></div></div>
+  </div>
+  <div class="bin-section">
+    <div class="bin-top"><span class="bin-label">O5</span><span class="bin-pct-text" id="pct4">0%</span></div>
+    <div class="bin-bar-wrap"><div class="bin-bar-fill" id="bar4" style="height:0%"></div></div>
+  </div>
+</div>
+
+<div id="hover-ring"></div>
+<div id="message"></div>
+<div id="login-backdrop" aria-hidden="true">
+  <div id="login-panel" role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <h2 id="login-title">Employee Log In</h2>
+    <div class="setting-row">
+      <label for="employee-name-input">Name</label>
+      <input id="employee-name-input" type="text" maxlength="24" autocomplete="name" spellcheck="false" placeholder="Enter name">
+    </div>
+    <div class="settings-actions">
+      <button id="login-save" type="button" class="primary">Enter</button>
+    </div>
+  </div>
+</div>
+<div id="settings-backdrop" aria-hidden="true">
+  <div id="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <h2 id="settings-title">Settings</h2>
+    <div class="setting-row">
+      <label for="rows-input">Rows</label>
+      <input id="rows-input" type="number" min="1" max="60" step="1">
+    </div>
+    <div class="setting-row">
+      <label for="cols-input">Columns</label>
+      <input id="cols-input" type="number" min="1" max="80" step="1">
+    </div>
+    <div class="setting-row">
+      <label for="gap-input">Spacing between numbers</label>
+      <input id="gap-input" type="number" min="0" max="60" step="1">
+    </div>
+    <div class="setting-row">
+      <label for="scary-input">Scary numbers</label>
+      <input id="scary-input" type="number" min="1" max="400" step="1">
+    </div>
+    <div class="setting-row">
+      <label for="scary-color-input">Scary color</label>
+      <input id="scary-color-input" type="color">
+    </div>
+    <div class="setting-row">
+      <label for="collect-input">Collect when scary</label>
+      <input id="collect-input" type="number" min="1" max="5" step="1">
+    </div>
+    <div class="settings-help" id="collection-help"></div>
+    <div class="settings-actions">
+      <button id="settings-cancel" type="button">Cancel</button>
+      <button id="settings-save" type="button" class="primary">Apply</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const field = document.getElementById('field');
+  const topName = document.getElementById('top-name');
+  const topTime = document.getElementById('top-time');
+  const topFill = document.getElementById('top-fill');
+  const topSettingsBtn = document.getElementById('top-settings-btn');
+  const ring = document.getElementById('hover-ring');
+  const msgEl = document.getElementById('message');
+  const roundDisplay = document.getElementById('round-display');
+  const loginBackdrop = document.getElementById('login-backdrop');
+  const employeeNameInput = document.getElementById('employee-name-input');
+  const loginSave = document.getElementById('login-save');
+  const settingsBackdrop = document.getElementById('settings-backdrop');
+  const rowsInput = document.getElementById('rows-input');
+  const colsInput = document.getElementById('cols-input');
+  const gapInput = document.getElementById('gap-input');
+  const scaryInput = document.getElementById('scary-input');
+  const scaryColorInput = document.getElementById('scary-color-input');
+  const collectInput = document.getElementById('collect-input');
+  const settingsCancel = document.getElementById('settings-cancel');
+  const settingsSave = document.getElementById('settings-save');
+  const collectionHelp = document.getElementById('collection-help');
+
+  const HOVER_RADIUS = 100;
+  const BINS = 5;
+  const BIN_CAPACITY = 8;
+  const GRID_MARGIN = 20;
+  const GRID_JITTER = 1;
+  const HOVER_RADIUS_SQ = HOVER_RADIUS * HOVER_RADIUS;
+  const CONNECT_RADIUS_SQ = (HOVER_RADIUS * 1.5) * (HOVER_RADIUS * 1.5);
+  const DEFAULT_SETTINGS = { rows: 15, cols: 30, gap: 1, scary: 42, scaryColor: '#5ef0e8', collect: 4 };
+  const SETTINGS_KEY = 'macrodata-settings-v1';
+  const PROFILE_PREFIX = 'macrodata-profile-v1:';
+  const LEGACY_APP_STATE_KEY = 'macrodata-app-state-v1';
+  const DEFAULT_BIN_COUNTS = [0, 0, 0, 0, 0];
+
+  let nums = [];
+  let scarySet = new Set();
+  let capturedSet = new Set();
+  let mouseX = -999, mouseY = -999;
+  let round = 1;
+  let binCounts = [...DEFAULT_BIN_COUNTS];
+  let fieldW, fieldH;
+  let clicking = false;
+  let collectingSet = new Set();
+  let slotCount = 0;
+  let employeeName = '';
+  const persisted = loadAppState();
+  employeeName = persisted.employeeName;
+  let settings = persisted.settings;
+  round = persisted.round;
+  binCounts = persisted.binCounts;
+  let floatTick = 0;
+  let floatTimer = null;
+  let timeTimer = null;
+  let rotationTimer = null;
+
+  function randBetween(a, b) { return a + Math.random() * (b - a); }
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function clampInt(value, min, max, fallback) {
+    const n = parseInt(value, 10);
+    if (Number.isNaN(n)) return fallback;
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function clampColor(value, fallback) {
+    return /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
+  }
+
+  function normalizeName(name) {
+    return String(name || '').trim();
+  }
+
+  function profileKeyForName(name) {
+    return PROFILE_PREFIX + normalizeName(name).toLowerCase();
+  }
+
+  function normalizeBinCounts(value) {
+    if (!Array.isArray(value) || value.length !== BINS) return [...DEFAULT_BIN_COUNTS];
+    return value.map(v => clampInt(v, 0, BIN_CAPACITY, 0));
+  }
+
+  function loadAppState() {
+    try {
+      const raw = localStorage.getItem(LEGACY_APP_STATE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const legacyName = normalizeName(parsed.employeeName);
+        if (legacyName) {
+          const parsedSettings = parsed.settings || {};
+          return {
+            employeeName: legacyName,
+            settings: {
+              rows: clampInt(parsedSettings.rows, 1, 60, DEFAULT_SETTINGS.rows),
+              cols: clampInt(parsedSettings.cols, 1, 80, DEFAULT_SETTINGS.cols),
+              gap: clampInt(parsedSettings.gap, 0, 60, DEFAULT_SETTINGS.gap),
+              scary: clampInt(parsedSettings.scary, 1, 400, DEFAULT_SETTINGS.scary),
+              scaryColor: clampColor(parsedSettings.scaryColor, DEFAULT_SETTINGS.scaryColor),
+              collect: clampInt(parsedSettings.collect, 1, 5, DEFAULT_SETTINGS.collect)
+            },
+            round: clampInt(parsed.round, 1, 9999, 1),
+            binCounts: normalizeBinCounts(parsed.binCounts)
+          };
+        }
+      }
+    } catch {
+      // fall through to legacy storage
+    }
+
+    const legacySettings = loadSettings();
+    return {
+      employeeName: '',
+      settings: legacySettings,
+      round: 1,
+      binCounts: [...DEFAULT_BIN_COUNTS]
+    };
+  }
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (!raw) return { ...DEFAULT_SETTINGS };
+      const parsed = JSON.parse(raw);
+      return {
+        rows: clampInt(parsed.rows, 1, 60, DEFAULT_SETTINGS.rows),
+        cols: clampInt(parsed.cols, 1, 80, DEFAULT_SETTINGS.cols),
+        gap: clampInt(parsed.gap, 0, 60, DEFAULT_SETTINGS.gap),
+        scary: clampInt(parsed.scary, 1, 400, DEFAULT_SETTINGS.scary),
+        scaryColor: clampColor(parsed.scaryColor, DEFAULT_SETTINGS.scaryColor),
+        collect: clampInt(parsed.collect, 1, 5, DEFAULT_SETTINGS.collect)
+      };
+    } catch {
+      return { ...DEFAULT_SETTINGS };
+    }
+  }
+
+  function saveSettings(nextSettings) {
+    settings = nextSettings;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    saveAppState();
+  }
+
+  function saveAppState() {
+    if (!employeeName) return;
+    localStorage.setItem(profileKeyForName(employeeName), JSON.stringify({
+      employeeName,
+      settings,
+      round,
+      binCounts
+    }));
+  }
+
+  function loadProfileByName(name) {
+    const normalizedName = normalizeName(name);
+    if (!normalizedName) {
+      return {
+        employeeName: '',
+        settings: { ...DEFAULT_SETTINGS },
+        round: 1,
+        binCounts: [...DEFAULT_BIN_COUNTS]
+      };
+    }
+
+    const key = profileKeyForName(normalizedName);
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const parsedSettings = parsed.settings || {};
+        return {
+          employeeName: normalizedName,
+          settings: {
+            rows: clampInt(parsedSettings.rows, 1, 60, DEFAULT_SETTINGS.rows),
+            cols: clampInt(parsedSettings.cols, 1, 80, DEFAULT_SETTINGS.cols),
+            gap: clampInt(parsedSettings.gap, 0, 60, DEFAULT_SETTINGS.gap),
+            scary: clampInt(parsedSettings.scary, 1, 400, DEFAULT_SETTINGS.scary),
+            scaryColor: clampColor(parsedSettings.scaryColor, DEFAULT_SETTINGS.scaryColor),
+            collect: clampInt(parsedSettings.collect, 1, 5, DEFAULT_SETTINGS.collect)
+          },
+          round: clampInt(parsed.round, 1, 9999, 1),
+          binCounts: normalizeBinCounts(parsed.binCounts)
+        };
+      }
+
+      const legacyRaw = localStorage.getItem(LEGACY_APP_STATE_KEY);
+      if (legacyRaw) {
+        const parsed = JSON.parse(legacyRaw);
+        if (normalizeName(parsed.employeeName).toLowerCase() === normalizedName.toLowerCase()) {
+          const parsedSettings = parsed.settings || {};
+          const profile = {
+            employeeName: normalizedName,
+            settings: {
+              rows: clampInt(parsedSettings.rows, 1, 60, DEFAULT_SETTINGS.rows),
+              cols: clampInt(parsedSettings.cols, 1, 80, DEFAULT_SETTINGS.cols),
+              gap: clampInt(parsedSettings.gap, 0, 60, DEFAULT_SETTINGS.gap),
+              scary: clampInt(parsedSettings.scary, 1, 400, DEFAULT_SETTINGS.scary),
+              scaryColor: clampColor(parsedSettings.scaryColor, DEFAULT_SETTINGS.scaryColor),
+              collect: clampInt(parsedSettings.collect, 1, 5, DEFAULT_SETTINGS.collect)
+            },
+            round: clampInt(parsed.round, 1, 9999, 1),
+            binCounts: normalizeBinCounts(parsed.binCounts)
+          };
+          localStorage.setItem(key, JSON.stringify(profile));
+          return profile;
+        }
+      }
+    } catch {
+      // fall through to defaults
+    }
+
+    return {
+      employeeName: normalizedName,
+      settings: { ...DEFAULT_SETTINGS },
+      round: 1,
+      binCounts: [...DEFAULT_BIN_COUNTS]
+    };
+  }
+
+  function getFillPct() {
+    const totalFilled = binCounts.reduce((sum, value) => sum + value, 0);
+    return Math.round((totalFilled / (BINS * BIN_CAPACITY)) * 100);
+  }
+
+  function updateTopBar() {
+    topName.textContent = employeeName ? employeeName.toUpperCase() : 'EMPLOYEE';
+    topTime.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    topFill.textContent = getFillPct() + '%';
+    roundDisplay.textContent = 'ROTATION ' + String(round).padStart(3, '0');
+  }
+
+  function startTopClock() {
+    updateTopBar();
+    if (timeTimer) clearInterval(timeTimer);
+    timeTimer = setInterval(updateTopBar, 1000);
+  }
+
+  function openLogin() {
+    loginBackdrop.classList.add('open');
+    loginBackdrop.setAttribute('aria-hidden', 'false');
+    employeeNameInput.value = employeeName || '';
+    setTimeout(() => employeeNameInput.focus(), 0);
+  }
+
+  function closeLogin() {
+    loginBackdrop.classList.remove('open');
+    loginBackdrop.setAttribute('aria-hidden', 'true');
+  }
+
+  function saveEmployeeName() {
+    const value = employeeNameInput.value.trim();
+    if (!value) {
+      showMessage('NAME REQUIRED', '#ff4444', 800);
+      employeeNameInput.focus();
+      return;
+    }
+    const currentName = normalizeName(employeeName);
+    const nextProfile = loadProfileByName(value);
+    if (currentName.toLowerCase() !== nextProfile.employeeName.toLowerCase()) {
+      saveAppState();
+    }
+    employeeName = nextProfile.employeeName;
+    settings = nextProfile.settings;
+    round = nextProfile.round;
+    binCounts = nextProfile.binCounts;
+    saveAppState();
+    updateTopBar();
+    closeLogin();
+    init();
+  }
+
+  function scheduleRotationComplete() {
+    if (rotationTimer) return;
+    rotationTimer = setTimeout(() => {
+      rotationTimer = null;
+      clearBinCollecting();
+      showMessage('ROTATION COMPLETE', '#4ecdc4', 1200);
+      round++;
+      roundDisplay.textContent = 'ROTATION ' + String(round).padStart(3, '0');
+      binCounts = [...DEFAULT_BIN_COUNTS];
+      saveAppState();
+      init();
+    }, 500);
+  }
+
+  function openSettings() {
+    rowsInput.value = settings.rows;
+    colsInput.value = settings.cols;
+    gapInput.value = settings.gap;
+    scaryInput.value = settings.scary;
+    scaryColorInput.value = settings.scaryColor;
+    collectInput.value = settings.collect;
+    collectionHelp.textContent = `Collection rule: the game randomly marks ${settings.scary} numbers as scary each round. If the scary numbers under your cursor form a connected group of at least ${settings.collect}, clicking collects that group into the least-filled bin.`;
+    settingsBackdrop.classList.add('open');
+    settingsBackdrop.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeSettings() {
+    settingsBackdrop.classList.remove('open');
+    settingsBackdrop.setAttribute('aria-hidden', 'true');
+  }
+
+  function init() {
+    fieldW = field.clientWidth;
+    fieldH = field.clientHeight;
+    document.documentElement.style.setProperty('--scary-color', settings.scaryColor);
+    if (rotationTimer) {
+      clearTimeout(rotationTimer);
+      rotationTimer = null;
+    }
+    clearBinCollecting();
+    field.innerHTML = '';
+    nums = [];
+    scarySet = new Set();
+    capturedSet = new Set();
+    if (floatTimer) {
+      clearInterval(floatTimer);
+      floatTimer = null;
+    }
+
+    const usableW = Math.max(1, fieldW - GRID_MARGIN * 2);
+    const usableH = Math.max(1, fieldH - GRID_MARGIN * 2);
+    const gridOffsetX = GRID_MARGIN;
+    const gridOffsetY = GRID_MARGIN;
+    const cols = Math.max(1, settings.cols);
+    const rows = Math.max(1, settings.rows);
+    const gapLimitX = cols > 1 ? Math.max(0, Math.floor((usableW - cols * 10) / (cols - 1))) : 0;
+    const gapLimitY = rows > 1 ? Math.max(0, Math.floor((usableH - rows * 10) / (rows - 1))) : 0;
+    const gap = Math.max(0, Math.min(settings.gap, gapLimitX, gapLimitY));
+    const cellW = Math.max(10, (usableW - (cols - 1) * gap) / cols);
+    const cellH = Math.max(10, (usableH - (rows - 1) * gap) / rows);
+    const cells = [];
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        cells.push({
+          x: gridOffsetX + col * (cellW + gap) + cellW / 2,
+          y: gridOffsetY + row * (cellH + gap) + cellH / 2
+        });
+      }
+    }
+
+    shuffle(cells);
+    slotCount = cells.length;
+
+    for (let i = 0; i < slotCount; i++) {
+      const digit = Math.floor(Math.random() * 10);
+      const slot = cells[i];
+      const x = slot.x + randBetween(-GRID_JITTER, GRID_JITTER);
+      const y = slot.y + randBetween(-GRID_JITTER, GRID_JITTER);
+      const baseSize = Math.max(10, Math.min(22, Math.min(cellW, cellH) * 0.62));
+      const el = document.createElement('span');
+      el.className = 'num';
+      el.textContent = digit;
+      el.classList.add('floating');
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.fontSize = baseSize + 'px';
+      field.appendChild(el);
+      nums.push({
+        el,
+        x,
+        y,
+        baseX: x,
+        baseY: y,
+        phase: Math.random() * Math.PI * 2,
+        digit,
+        baseSize
+      });
+    }
+
+    pickScary();
+    updateBinsUI();
+    updateInteraction();
+    startFloating();
+  }
+
+  function startFloating() {
+    floatTick = 0;
+    if (floatTimer) clearInterval(floatTimer);
+    floatTimer = setInterval(() => {
+      floatTick++;
+      for (let i = 0; i < nums.length; i++) {
+        if (capturedSet.has(i) || collectingSet.has(i)) continue;
+        const n = nums[i];
+        const scaryBoost = scarySet.has(i) ? 2.5 : 1;
+        const jitter = scarySet.has(i) ? 0.75 : 0.15;
+        const wobbleX = Math.sin(floatTick * 0.18 + n.phase) * (1.6 * scaryBoost) + randBetween(-jitter, jitter);
+        const wobbleY = Math.cos(floatTick * 0.15 + n.phase) * (1.2 * scaryBoost) + randBetween(-jitter, jitter);
+        n.x = n.baseX + wobbleX;
+        n.y = n.baseY + wobbleY;
+      }
+      updateInteraction();
+    }, 33);
+  }
+
+  function pickScary() {
+    scarySet.clear();
+    const avail = nums.map((_, i) => i).filter(i => !capturedSet.has(i));
+    while (scarySet.size < Math.min(settings.scary, avail.length)) {
+      const idx = avail[Math.floor(Math.random() * avail.length)];
+      scarySet.add(idx);
+    }
+  }
+
+  function getInHover() {
+    const inHover = [];
+    for (let i = 0; i < nums.length; i++) {
+      if (capturedSet.has(i)) continue;
+      const n = nums[i];
+      const dx = n.x - mouseX;
+      const dy = n.y - mouseY;
+      if ((dx * dx + dy * dy) < HOVER_RADIUS_SQ) inHover.push(i);
+    }
+    return inHover;
+  }
+
+  function getConnectedScary(inHover) {
+    const scaryInHover = inHover.filter(i => scarySet.has(i));
+    if (scaryInHover.length < settings.collect) return [];
+    const scarySet2 = new Set(scaryInHover);
+    const visited = new Set();
+    const groups = [];
+    for (const start of scarySet2) {
+      if (visited.has(start)) continue;
+      const group = [];
+      const stack = [start];
+      while (stack.length) {
+        const cur = stack.pop();
+        if (visited.has(cur)) continue;
+        visited.add(cur);
+        group.push(cur);
+        const cn = nums[cur];
+        for (const j of scarySet2) {
+          if (!visited.has(j)) {
+            const nj = nums[j];
+            const dx = cn.x - nj.x;
+            const dy = cn.y - nj.y;
+            if ((dx * dx + dy * dy) < CONNECT_RADIUS_SQ) stack.push(j);
+          }
+        }
+      }
+      if (group.length > 0) groups.push(group);
+    }
+    if (!groups.length) return [];
+    return groups.sort((a,b) => b.length - a.length)[0];
+  }
+
+  function updateInteraction() {
+    const inHover = getInHover();
+    const connectedScary = getConnectedScary(inHover);
+    const canCapture = connectedScary.length >= settings.collect;
+
+    for (let i = 0; i < nums.length; i++) {
+      const n = nums[i];
+      if (capturedSet.has(i)) {
+        n.el.className = 'num captured';
+        n.el.style.transform = '';
+        n.el.style.fontSize = n.baseSize + 'px';
+        continue;
+      }
+      if (collectingSet.has(i)) {
+        continue;
+      }
+      n.el.style.left = n.x + 'px';
+      n.el.style.top = n.y + 'px';
+
+      const dx = n.x - mouseX;
+      const dy = n.y - mouseY;
+      const distSq = dx * dx + dy * dy;
+
+      if (distSq < HOVER_RADIUS_SQ) {
+        const t = 1 - Math.sqrt(distSq) / HOVER_RADIUS;
+        const scale = 1 + t * 1.6;
+        n.el.style.fontSize = (n.baseSize * scale) + 'px';
+        if (scarySet.has(i)) {
+          n.el.className = 'num scary';
+          const shake = canCapture ? 6 : 3;
+          const sx = (Math.random() - 0.5) * shake;
+          const sy = (Math.random() - 0.5) * shake;
+          n.el.style.transform = `translate(${sx}px, ${sy}px)`;
+          n.el.style.textShadow = canCapture ? '0 0 18px var(--scary-color, #5ef0e8)' : '0 0 10px rgba(94,240,232,0.45)';
+        } else {
+          n.el.className = 'num';
+          n.el.style.transform = '';
+          n.el.style.textShadow = '';
+        }
+      } else {
+        n.el.style.fontSize = n.baseSize + 'px';
+        n.el.style.transform = '';
+        n.el.style.textShadow = '';
+        n.el.className = scarySet.has(i) ? 'num scary' : 'num';
+      }
+    }
+
+  }
+
+  function showMessage(text, color, duration) {
+    msgEl.textContent = text;
+    msgEl.style.color = color || '#4ecdc4';
+    msgEl.style.opacity = '1';
+    setTimeout(() => { msgEl.style.opacity = '0'; }, duration || 600);
+  }
+
+  function getBinTargetPosition(binIndex) {
+    const bar = document.getElementById('bar' + binIndex);
+    const rect = bar.getBoundingClientRect();
+    const fieldRect = field.getBoundingClientRect();
+    return {
+      x: rect.left + rect.width / 2 - fieldRect.left,
+      y: rect.top + rect.height / 2 - fieldRect.top
+    };
+  }
+
+  function setBinCollecting(binIndex, active) {
+    const section = document.querySelectorAll('.bin-section')[binIndex];
+    if (section) section.classList.toggle('collecting', active);
+  }
+
+  function clearBinCollecting() {
+    document.querySelectorAll('.bin-section').forEach(section => section.classList.remove('collecting'));
+  }
+
+  function handleClick() {
+    if (clicking) return;
+    const inHover = getInHover();
+    const connectedScary = getConnectedScary(inHover);
+    const scaryInHover = inHover.filter(i => scarySet.has(i));
+    if (scaryInHover.length === 0) {
+      showMessage('NUMBERS NOT SCARY', '#ff4444', 500);
+      return;
+    }
+    if (connectedScary.length < settings.collect) {
+      showMessage('NOT ENOUGH SCARY NUMBERS', '#ff4444', 650);
+      return;
+    }
+
+    clicking = true;
+    const targetBin = binCounts.indexOf(Math.min(...binCounts));
+    const targetPos = getBinTargetPosition(targetBin);
+    setBinCollecting(targetBin, true);
+
+    connectedScary.forEach(i => {
+      collectingSet.add(i);
+      const n = nums[i];
+      n.el.className = 'num collecting scary';
+      n.el.style.transition = 'left 0.35s ease, top 0.35s ease, transform 0.35s ease, opacity 0.35s ease, font-size 0.35s ease';
+      n.el.style.zIndex = '20';
+      n.el.style.opacity = '1';
+      n.el.style.transform = 'scale(0.2)';
+      n.el.style.left = targetPos.x + 'px';
+      n.el.style.top = targetPos.y + 'px';
+      n.el.classList.add('flash-success');
+      setTimeout(() => {
+        collectingSet.delete(i);
+        capturedSet.add(i);
+        n.el.className = 'num captured';
+        n.el.style.zIndex = '';
+        n.el.style.transition = '';
+        n.el.style.transform = '';
+      }, 360);
+    });
+
+    binCounts[targetBin] = Math.min(BIN_CAPACITY, binCounts[targetBin] + connectedScary.length);
+    updateBinsUI();
+    const fillPct = getFillPct();
+    if (fillPct >= 100) {
+      clicking = false;
+      scheduleRotationComplete();
+    } else {
+      setTimeout(() => {
+        setBinCollecting(targetBin, false);
+        pickScary();
+        clicking = false;
+      }, 400);
+    }
+  }
+
+  function updateBinsUI() {
+    for (let b = 0; b < BINS; b++) {
+      const pct = Math.round((binCounts[b] / BIN_CAPACITY) * 100);
+      document.getElementById('pct' + b).textContent = pct + '%';
+      const bar = document.getElementById('bar' + b);
+      bar.style.height = pct + '%';
+      bar.className = 'bin-bar-fill' + (pct >= 100 ? ' complete' : '');
+    }
+    document.getElementById('addr-left').textContent =
+            '0x' + Math.floor(Math.random()*0xFFFFFF).toString(16).toUpperCase().padStart(6,'0') +
+            ' : 0x' + Math.floor(Math.random()*0xFFFFFF).toString(16).toUpperCase().padStart(6,'0');
+    updateTopBar();
+    saveAppState();
+    if (getFillPct() >= 100) {
+      scheduleRotationComplete();
+    }
+  }
+
+  topName.addEventListener('click', openLogin);
+  document.addEventListener('mousemove', e => {
+    const rect = field.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+    updateInteraction();
+  });
+
+  topSettingsBtn.addEventListener('click', openSettings);
+  settingsBackdrop.addEventListener('click', e => {
+    if (e.target === settingsBackdrop) closeSettings();
+  });
+  settingsCancel.addEventListener('click', closeSettings);
+  settingsSave.addEventListener('click', () => {
+    const nextSettings = {
+      rows: clampInt(rowsInput.value, 1, 60, DEFAULT_SETTINGS.rows),
+      cols: clampInt(colsInput.value, 1, 80, DEFAULT_SETTINGS.cols),
+      gap: clampInt(gapInput.value, 0, 60, DEFAULT_SETTINGS.gap),
+      scary: clampInt(scaryInput.value, 1, 400, DEFAULT_SETTINGS.scary),
+      scaryColor: clampColor(scaryColorInput.value, DEFAULT_SETTINGS.scaryColor),
+      collect: clampInt(collectInput.value, 1, 5, DEFAULT_SETTINGS.collect)
+    };
+    saveSettings(nextSettings);
+    closeSettings();
+    init();
+  });
+  loginSave.addEventListener('click', saveEmployeeName);
+  employeeNameInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveEmployeeName();
+  });
+  document.addEventListener('keydown', e => {
+    if (loginBackdrop.classList.contains('open')) {
+      if (e.key === 'Enter') {
+        saveEmployeeName();
+      }
+      return;
+    }
+    if (e.key === 'Escape') closeSettings();
+  });
+  document.addEventListener('click', handleClick);
+  window.addEventListener('load', () => {
+    init();
+    startTopClock();
+    updateTopBar();
+    if (!employeeName) {
+      openLogin();
+    } else {
+      closeLogin();
+    }
+  });
+  window.addEventListener('resize', init);
+</script>
+</body>
+</html>
