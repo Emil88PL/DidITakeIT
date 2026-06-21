@@ -49,7 +49,14 @@
     }
     .num.flash-success { color: #ffffff; opacity: 1; }
     .num.refresh-wave {
-      animation: refreshWave 0.6s ease-out forwards;
+      animation: refreshWave 4.2s ease-out forwards;
+    }
+    .num.refresh-flash {
+      color: var(--scary-color, #5ef0e8) !important;
+      text-shadow: 0 0 25px var(--scary-color, #5ef0e8), 0 0 50px var(--scary-color, #5ef0e8) !important;
+    }
+    .num.refresh-fade {
+      transition: color 2.5s ease-out, text-shadow 2.5s ease-out;
     }
     @keyframes refreshWave {
       0% {
@@ -448,7 +455,7 @@
     </div>
     <div class="setting-row">
       <label for="refresh-input">Auto-refresh (seconds)</label>
-      <input id="refresh-input" type="number" min="10" max="600" step="10">
+      <input id="refresh-input" type="number" min="10" max="3600" step="10">
     </div>
     <div class="setting-row">
       <label>Music</label>
@@ -581,7 +588,7 @@
       scary: clampInt(parsedSettings.scary, 1, 400, DEFAULT_SETTINGS.scary),
       scaryColor: clampColor(parsedSettings.scaryColor, DEFAULT_SETTINGS.scaryColor),
       collect: clampInt(parsedSettings.collect, 1, 5, DEFAULT_SETTINGS.collect),
-      refresh: clampInt(parsedSettings.refresh, 10, 600, DEFAULT_SETTINGS.refresh),
+      refresh: clampInt(parsedSettings.refresh, 10, 3600, DEFAULT_SETTINGS.refresh),
       musicOn: clampBool(parsedSettings.musicOn, DEFAULT_SETTINGS.musicOn),
       musicVolume: clampInt(parsedSettings.musicVolume, 0, 100, DEFAULT_SETTINGS.musicVolume)
     };
@@ -891,7 +898,6 @@
     updateBinsUI();
     updateInteraction();
     startFloating();
-    startRefreshTimer();
   }
 
   function startFloating() {
@@ -932,20 +938,42 @@
       startRefreshTimer();
       return;
     }
+
     const previouslyScary = new Set(scarySet);
-    pickScary();
+    const flashEnd = (nums.length - 1) * 2;
+    const holdAfterFullGlow = 1000;
+
     for (let i = 0; i < nums.length; i++) {
-      if (!previouslyScary.has(i) && scarySet.has(i) && !capturedSet.has(i) && !collectingSet.has(i)) {
+      if (!capturedSet.has(i) && !collectingSet.has(i)) {
         const n = nums[i];
-        n.el.classList.add('refresh-wave');
         setTimeout(() => {
-          n.el.classList.remove('refresh-wave');
-        }, 600);
+          if (!capturedSet.has(i) && !collectingSet.has(i)) {
+            n.el.classList.add('refresh-flash');
+          }
+        }, i * 2);
       }
     }
-    updateInteraction();
-    showMessage('REFRESHING', settings.scaryColor, 800);
-    startRefreshTimer();
+
+    setTimeout(() => {
+      pickScary();
+      for (let i = 0; i < nums.length; i++) {
+        if (!capturedSet.has(i) && !collectingSet.has(i)) {
+          const n = nums[i];
+          n.el.classList.remove('refresh-flash');
+          n.el.classList.add('refresh-fade');
+          setTimeout(() => { n.el.classList.remove('refresh-fade'); }, 3000);
+
+          if (!previouslyScary.has(i) && scarySet.has(i)) {
+            setTimeout(() => {
+              n.el.classList.add('refresh-wave');
+              setTimeout(() => { n.el.classList.remove('refresh-wave'); }, 2000);
+            }, 300);
+          }
+        }
+      }
+      showMessage('REFRESHING - Reconnecting to Macrodata Refinement data base', settings.scaryColor, 2500);
+      startRefreshTimer();
+    }, flashEnd + holdAfterFullGlow);
   }
 
   function pickScary() {
@@ -1014,6 +1042,11 @@
         continue;
       }
       if (collectingSet.has(i)) {
+        continue;
+      }
+      if (n.el.classList.contains('refresh-fade') || n.el.classList.contains('refresh-flash')) {
+        n.el.style.left = n.x + 'px';
+        n.el.style.top = n.y + 'px';
         continue;
       }
       n.el.style.left = n.x + 'px';
@@ -1124,7 +1157,6 @@
     } else {
       setTimeout(() => {
         setBinCollecting(targetBin, false);
-        pickScary();
         clicking = false;
         startRefreshTimer();
       }, 400);
@@ -1180,14 +1212,13 @@
       scary: clampInt(scaryInput.value, 1, 400, DEFAULT_SETTINGS.scary),
       scaryColor: clampColor(scaryColorInput.value, DEFAULT_SETTINGS.scaryColor),
       collect: clampInt(collectInput.value, 1, 5, DEFAULT_SETTINGS.collect),
-      refresh: clampInt(refreshInput.value, 10, 600, DEFAULT_SETTINGS.refresh),
+      refresh: clampInt(refreshInput.value, 10, 3600, DEFAULT_SETTINGS.refresh),
       musicOn: settings.musicOn,
       musicVolume: settings.musicVolume
     };
     saveSettings(nextSettings);
     closeSettings();
     init();
-    startRefreshTimer();
   });
   loginSave.addEventListener('click', saveEmployeeName);
   employeeNameInput.addEventListener('keydown', e => {
