@@ -48,6 +48,21 @@
       transition: left 0.35s ease, top 0.35s ease, transform 0.35s ease, opacity 0.35s ease, font-size 0.35s ease;
     }
     .num.flash-success { color: #ffffff; opacity: 1; }
+    .num.refresh-wave {
+      animation: refreshWave 0.6s ease-out forwards;
+    }
+    @keyframes refreshWave {
+      0% {
+        color: var(--scary-color, #5ef0e8);
+        text-shadow: 0 0 30px var(--scary-color, #5ef0e8), 0 0 60px var(--scary-color, #5ef0e8);
+        transform: scale(1.5);
+      }
+      100% {
+        color: #3bbdb5;
+        text-shadow: none;
+        transform: scale(1);
+      }
+    }
     @keyframes scaryPulse {
       0%, 100% { filter: brightness(0.95); }
       50% { filter: brightness(1.25); }
@@ -432,6 +447,10 @@
       <input id="collect-input" type="number" min="1" max="5" step="1">
     </div>
     <div class="setting-row">
+      <label for="refresh-input">Auto-refresh (seconds)</label>
+      <input id="refresh-input" type="number" min="10" max="600" step="10">
+    </div>
+    <div class="setting-row">
       <label>Music</label>
       <button id="music-toggle" type="button" class="primary">Stop music</button>
     </div>
@@ -469,6 +488,7 @@
   const scaryInput = document.getElementById('scary-input');
   const scaryColorInput = document.getElementById('scary-color-input');
   const collectInput = document.getElementById('collect-input');
+  const refreshInput = document.getElementById('refresh-input');
   const musicToggle = document.getElementById('music-toggle');
   const musicVolumeInput = document.getElementById('music-volume-input');
   const musicVolumeValue = document.getElementById('music-volume-value');
@@ -483,7 +503,7 @@
   const GRID_JITTER = 1;
   const HOVER_RADIUS_SQ = HOVER_RADIUS * HOVER_RADIUS;
   const CONNECT_RADIUS_SQ = (HOVER_RADIUS * 1.5) * (HOVER_RADIUS * 1.5);
-  const DEFAULT_SETTINGS = { rows: 15, cols: 30, gap: 1, scary: 47, scaryColor: '#5ef0e8', collect: 4, musicOn: true, musicVolume: 72 };
+  const DEFAULT_SETTINGS = { rows: 15, cols: 30, gap: 1, scary: 47, scaryColor: '#5ef0e8', collect: 4, refresh: 300, musicOn: true, musicVolume: 72 };
   const SETTINGS_KEY = 'macrodata-settings-v1';
   const PROFILE_PREFIX = 'macrodata-profile-v1:';
   const LEGACY_APP_STATE_KEY = 'macrodata-app-state-v1';
@@ -513,6 +533,7 @@
   let floatTimer = null;
   let timeTimer = null;
   let rotationTimer = null;
+  let refreshTimer = null;
 
   function randBetween(a, b) { return a + Math.random() * (b - a); }
 
@@ -560,6 +581,7 @@
       scary: clampInt(parsedSettings.scary, 1, 400, DEFAULT_SETTINGS.scary),
       scaryColor: clampColor(parsedSettings.scaryColor, DEFAULT_SETTINGS.scaryColor),
       collect: clampInt(parsedSettings.collect, 1, 5, DEFAULT_SETTINGS.collect),
+      refresh: clampInt(parsedSettings.refresh, 10, 600, DEFAULT_SETTINGS.refresh),
       musicOn: clampBool(parsedSettings.musicOn, DEFAULT_SETTINGS.musicOn),
       musicVolume: clampInt(parsedSettings.musicVolume, 0, 100, DEFAULT_SETTINGS.musicVolume)
     };
@@ -779,8 +801,9 @@
     scaryInput.value = settings.scary;
     scaryColorInput.value = settings.scaryColor;
     collectInput.value = settings.collect;
+    refreshInput.value = settings.refresh;
     updateMusicUI();
-    collectionHelp.textContent = `Collection rule: the game randomly marks ${settings.scary} numbers as scary each round. If the scary numbers under your cursor form a connected group of at least ${settings.collect}, clicking collects that group into the least-filled bin.`;
+    collectionHelp.textContent = `Collection rule: the game randomly marks ${settings.scary} numbers as scary each round. If the scary numbers under your cursor form a connected group of at least ${settings.collect}, clicking collects that group into the least-filled bin. If no capture for ${settings.refresh} seconds, scary numbers auto-refresh.`;
     settingsBackdrop.classList.add('open');
     settingsBackdrop.setAttribute('aria-hidden', 'false');
   }
@@ -798,6 +821,10 @@
     if (rotationTimer) {
       clearTimeout(rotationTimer);
       rotationTimer = null;
+    }
+    if (refreshTimer) {
+      clearTimeout(refreshTimer);
+      refreshTimer = null;
     }
     clearBinCollecting();
     field.innerHTML = '';
@@ -864,6 +891,7 @@
     updateBinsUI();
     updateInteraction();
     startFloating();
+    startRefreshTimer();
   }
 
   function startFloating() {
@@ -883,6 +911,41 @@
       }
       updateInteraction();
     }, 33);
+  }
+
+  function startRefreshTimer() {
+    if (refreshTimer) clearTimeout(refreshTimer);
+    if (settings.refresh <= 0) return;
+    refreshTimer = setTimeout(() => {
+      triggerRefresh();
+    }, settings.refresh * 1000);
+  }
+
+  function triggerRefresh() {
+    if (clicking || nums.length === 0) {
+      startRefreshTimer();
+      return;
+    }
+    const inHover = getInHover();
+    const connectedScary = getConnectedScary(inHover);
+    if (connectedScary.length >= settings.collect) {
+      startRefreshTimer();
+      return;
+    }
+    const previouslyScary = new Set(scarySet);
+    pickScary();
+    for (let i = 0; i < nums.length; i++) {
+      if (!previouslyScary.has(i) && scarySet.has(i) && !capturedSet.has(i) && !collectingSet.has(i)) {
+        const n = nums[i];
+        n.el.classList.add('refresh-wave');
+        setTimeout(() => {
+          n.el.classList.remove('refresh-wave');
+        }, 600);
+      }
+    }
+    updateInteraction();
+    showMessage('REFRESHING', settings.scaryColor, 800);
+    startRefreshTimer();
   }
 
   function pickScary() {
@@ -1063,6 +1126,7 @@
         setBinCollecting(targetBin, false);
         pickScary();
         clicking = false;
+        startRefreshTimer();
       }, 400);
     }
   }
@@ -1116,12 +1180,14 @@
       scary: clampInt(scaryInput.value, 1, 400, DEFAULT_SETTINGS.scary),
       scaryColor: clampColor(scaryColorInput.value, DEFAULT_SETTINGS.scaryColor),
       collect: clampInt(collectInput.value, 1, 5, DEFAULT_SETTINGS.collect),
+      refresh: clampInt(refreshInput.value, 10, 600, DEFAULT_SETTINGS.refresh),
       musicOn: settings.musicOn,
       musicVolume: settings.musicVolume
     };
     saveSettings(nextSettings);
     closeSettings();
     init();
+    startRefreshTimer();
   });
   loginSave.addEventListener('click', saveEmployeeName);
   employeeNameInput.addEventListener('keydown', e => {
