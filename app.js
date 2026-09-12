@@ -1063,6 +1063,27 @@ telegramShowButton.addEventListener('click', toggleTelegramContainer);
 // Load initial state
 loadTelegramContainerState();
 
+// Shared save-tasks dispatcher so TaskBridge + TaskBridgeTerminal don't clobber each other
+// and Reset buttons don't stack wrappers.
+const saveTasksBridgeListeners = [];
+function patchSaveTasksOnce() {
+  if (window.__saveTasksPatched) return;
+  window.__saveTasksPatched = true;
+  const origSaveTasks = window.saveTasks;
+  window.saveTasks = (tasks) => {
+    origSaveTasks(tasks);
+    saveTasksBridgeListeners.forEach((listener) => {
+      try { listener(); } catch (e) { console.warn('saveTasks bridge listener failed', e); }
+    });
+  };
+}
+function registerSaveTasksBridge(fn) {
+  patchSaveTasksOnce();
+  if (!saveTasksBridgeListeners.includes(fn)) {
+    saveTasksBridgeListeners.push(fn);
+  }
+}
+
 class TaskBridge {
   constructor() {
     this.serverPort = 3456; // Fixed port for communication
@@ -1071,7 +1092,30 @@ class TaskBridge {
     this.sendInterval = null;
     this.lastSentTasksJson = '';
     this.lastSendTime = 0;
+    this.eventListenersAdded = false;
+    this.reconnectDelay = 5000;
     this.startServer();
+  }
+
+  ensureReconnectLoop() {
+    if (this.checkInterval) return;
+    this.checkInterval = setInterval(() => {
+      this.startServer();
+    }, this.reconnectDelay);
+  }
+
+  clearReconnectLoop() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
+  }
+
+  handleDisconnect() {
+    this.isServerRunning = false;
+    dot.style.backgroundColor = vividSkyBlue;
+    text.textContent = 'Reconnecting...';
+    this.ensureReconnectLoop();
   }
 
   async startServer() {
@@ -1082,32 +1126,30 @@ class TaskBridge {
         cache: 'no-cache' // Prevent caching
       });
       if (response.ok) {
+        this.clearReconnectLoop();
+        const wasDisconnected = !this.isServerRunning;
         this.isServerRunning = true;
         this.startSendingTasks();
         console.log('Desktop buddy server detected!');
         dot.style.backgroundColor = greenPrimary;
         text.textContent = 'Connected';
+        if (wasDisconnected) {
+          // Force immediate sync on (re)connect
+          this.sendTasks(true);
+        }
         return;
       }
     } catch (error) {
       // Keep logging but ensure error objects don't accumulate
       console.log('Desktop buddy not running, will retry...');
-      dot.style.backgroundColor = vividSkyBlue;
-      text.textContent = 'Reconnecting...';
     }
 
-    // CRITICAL FIX: Always clear existing interval before creating new one
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval);
-      this.checkInterval = null;
-    }
+    this.isServerRunning = false;
+    dot.style.backgroundColor = vividSkyBlue;
+    text.textContent = 'Reconnecting...';
 
-    // Only create new interval if we don't already have one running
-    if (!this.isServerRunning && !this.checkInterval) {
-      this.checkInterval = setInterval(() => {
-        this.startServer();
-      }, 50000);
-    }
+    // Always ensure retry loop is running when not connected
+    this.ensureReconnectLoop();
   }
 
   async sendTasks(force = false) {
@@ -1135,9 +1177,8 @@ class TaskBridge {
       });
     } catch (error) {
       console.log('Failed to send tasks to desktop buddy');
-      dot.style.backgroundColor = 'red';
-      text.textContent = 'Disconnected';
-      this.isServerRunning = false;
+      // Was connected, now lost -> go back to retry loop instead of stuck "Disconnected"
+      this.handleDisconnect();
     }
   }
 
@@ -1156,18 +1197,26 @@ class TaskBridge {
       this.sendTasks();
     }, 30000);
 
+    // Shared save hook (no double-wrapping on Reset)
+    if (!this._saveHook) {
+      this._saveHook = () => { this.sendTasks(true); };
+      registerSaveTasksBridge(this._saveHook);
+    }
+
     // CRITICAL FIX: Only add event listeners once to prevent duplicates
     if (!this.eventListenersAdded) {
-      // Send whenever tasks are saved (checkbox clicked, etc.)
-      const originalSaveTasks = window.saveTasks;
-      window.saveTasks = (tasks) => {
-        originalSaveTasks(tasks);
-        this.sendTasks(true); // force send immediately
-      };
-
-      // Detect tab focus (switching back to buddy) & send overdue status instantly
+      // Detect tab focus (switching back to buddy): retry ping if offline, sync if online
       window.addEventListener('focus', () => {
-        this.sendTasks(true);
+        if (!this.isServerRunning) {
+          this.startServer();
+        } else {
+          this.sendTasks(true);
+        }
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && !this.isServerRunning) {
+          this.startServer();
+        }
       });
 
       this.eventListenersAdded = true;
@@ -1234,7 +1283,29 @@ class TaskBridgeTerminal {
     this.lastSentTasksJson = '';
     this.lastSendTime = 0;
     this.eventListenersAdded = false;
+    this.reconnectDelay = 5000;
     this.startServer();
+  }
+
+  ensureReconnectLoop() {
+    if (this.checkInterval) return;
+    this.checkInterval = setInterval(() => {
+      this.startServer();
+    }, this.reconnectDelay);
+  }
+
+  clearReconnectLoop() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
+  }
+
+  handleDisconnect() {
+    this.isServerRunning = false;
+    dotTerminal.style.backgroundColor = vividSkyBlue;
+    textTerminal.textContent = 'Reconnecting...';
+    this.ensureReconnectLoop();
   }
 
   async startServer() {
@@ -1244,29 +1315,29 @@ class TaskBridgeTerminal {
         cache: 'no-cache'
       });
       if (response.ok) {
+        this.clearReconnectLoop();
+        const wasDisconnected = !this.isServerRunning;
         this.isServerRunning = true;
         this.startSendingTasks();
         console.log('Terminal buddy server detected!');
         dotTerminal.style.backgroundColor = greenPrimary;
         textTerminal.textContent = 'Connected';
+        if (wasDisconnected) {
+          this.sendTasks(true);
+          // Also (re)connect SSE so terminal edits flow back
+          connectToTerminalSSE();
+        }
         return;
       }
     } catch (error) {
       console.log('Terminal buddy not running, will retry...');
-      dotTerminal.style.backgroundColor = vividSkyBlue;
-      textTerminal.textContent = 'Reconnecting...';
     }
 
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval);
-      this.checkInterval = null;
-    }
+    this.isServerRunning = false;
+    dotTerminal.style.backgroundColor = vividSkyBlue;
+    textTerminal.textContent = 'Reconnecting...';
 
-    if (!this.isServerRunning && !this.checkInterval) {
-      this.checkInterval = setInterval(() => {
-        this.startServer();
-      }, 50000);
-    }
+    this.ensureReconnectLoop();
   }
 
   async sendTasks(force = false) {
@@ -1297,9 +1368,8 @@ class TaskBridgeTerminal {
       });
     } catch (error) {
       console.log('Failed to send tasks to Terminal buddy');
-      dotTerminal.style.backgroundColor = 'red';
-      textTerminal.textContent = 'Disconnected';
-      this.isServerRunning = false;
+      // Don't get stuck on "Disconnected" - keep retrying
+      this.handleDisconnect();
     }
   }
 
@@ -1315,18 +1385,26 @@ class TaskBridgeTerminal {
       this.sendTasks();
     }, 30000);
 
-    if (!this.eventListenersAdded) {
-      const originalSaveTasks = window.saveTasks;
-      window.saveTasks = (tasks) => {
-        originalSaveTasks(tasks);
+    if (!this._saveHook) {
+      this._saveHook = () => {
         if (!isUpdatingFromSSE) {
           this.sendTasks(true);
         }
       };
+      registerSaveTasksBridge(this._saveHook);
+    }
 
+    if (!this.eventListenersAdded) {
       window.addEventListener('focus', () => {
-        if (!isUpdatingFromSSE) {
+        if (!this.isServerRunning) {
+          this.startServer();
+        } else if (!isUpdatingFromSSE) {
           this.sendTasks(true);
+        }
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && !this.isServerRunning) {
+          this.startServer();
         }
       });
 
@@ -1483,6 +1561,8 @@ resetButton.addEventListener('click', () => {
   if (taskBridge) {
     taskBridge.destroy();
     taskBridge = new TaskBridge();
+    text.textContent = 'Reconnecting...';
+    dot.style.backgroundColor = vividSkyBlue;
     console.log("Task Buddy connection reset.");
   }
 });
@@ -1494,8 +1574,12 @@ resetButtonTerminal.addEventListener('click', () => {
   if (taskBridgeTerminal) {
     taskBridgeTerminal.destroy();
     taskBridgeTerminal = new TaskBridgeTerminal();
+    textTerminal.textContent = 'Reconnecting...';
+    dotTerminal.style.backgroundColor = vividSkyBlue;
     console.log("Terminal Buddy connection reset.");
   }
+  // SSE has its own retry loop - restart it too so terminal edits flow back
+  connectToTerminalSSE();
 });
 
 // --- Ring sound selection ---
