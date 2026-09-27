@@ -576,7 +576,7 @@ function pollTelegramForDone(taskId, botToken, chatId, messageId) {
           const replyToMsg = update.message.reply_to_message;
           if (replyToMsg.message_id === messageId) {
             const text = (update.message.text || "").trim().toLowerCase();
-            if (["done", "okay", "ok", "great", "great!"].includes(text)) {
+            if (["done", "okay", "ok", "great", "great!", "thanks", "thanks!"].includes(text)) {
               // Mark task as complete
               console.log(`Received DONE for task ${taskId} from Telegram`);
               markTaskCompleteFromTelegram(taskId);
