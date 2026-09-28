@@ -96,7 +96,7 @@ function shouldSendTelegramNotification(taskId) {
 
 // Helper: Get reminder text based on notification count
 function getReminderText(sendCount) {
-  if (sendCount === 1) return "";
+  if (!sendCount || sendCount <= 1) return "";
   if (sendCount === 2) return " (Reminder 1)";
   return ` (Reminder ${sendCount - 1})`;
 }
@@ -416,6 +416,9 @@ function toggleTask(id, checked) {
 function deleteTask(id) {
   let tasks = getTasks();
   tasks = tasks.filter(t => t.id !== id);
+  // Drop orphaned notification state + polling for the deleted task
+  clearTaskNotificationState(id);
+  stopTelegramPolling(id);
   saveTasks(tasks);
   renderTasks();
 }
@@ -453,17 +456,7 @@ function editTask(id) {
 // Function to send Telegram message for overdue tasks
 function sendTelegramMessage(allOverdueTasks, triggeringTaskId) {
   if (!allOverdueTasks || allOverdueTasks.length === 0) return;
-  
-  // Update notification state for the triggering task only
-  const now = Date.now();
-  let state = getTaskNotificationState(triggeringTaskId);
-  if (!state) {
-    state = { taskId: triggeringTaskId, firstSent: now, lastSent: now, sendCount: 0 };
-  }
-  state.lastSent = now;
-  state.sendCount = (state.sendCount || 0) + 1;
-  saveTaskNotificationState(triggeringTaskId, state);
-  
+
   let raw = localStorage.getItem("telegramDidITakeIt");
   let botToken, chatId, toggle, chatName;
   if (raw) {
@@ -491,6 +484,18 @@ function sendTelegramMessage(allOverdueTasks, triggeringTaskId) {
     console.log("Telegram notifications are OFF in settings.");
     return;
   }
+
+  // Update notification state for the triggering task only.
+  // Done here (after credential/toggle checks) so the counter only
+  // increments when a message will actually be sent.
+  const now = Date.now();
+  let state = getTaskNotificationState(triggeringTaskId);
+  if (!state) {
+    state = { taskId: triggeringTaskId, firstSent: now, lastSent: now, sendCount: 0 };
+  }
+  state.lastSent = now;
+  state.sendCount = (state.sendCount || 0) + 1;
+  saveTaskNotificationState(triggeringTaskId, state);
 
   // Build message showing all overdue tasks with their individual reminder counts
   const triggeringTask = allOverdueTasks.find(t => t.id === triggeringTaskId);
@@ -742,6 +747,9 @@ function resetTasksAtFourAM() {
     tasks.forEach(task => {
       task.checked = false;
       task.alarmTriggered = false;
+      // Fresh day = fresh notification counter
+      clearTaskNotificationState(task.id);
+      stopTelegramPolling(task.id);
     });
     saveTasks(tasks);
     renderTasks();
@@ -768,6 +776,10 @@ function checkDueTime() {
       task.alarmTriggered = false;
       changed = true;
       task.checked = false;
+      // Fresh day = fresh notification counter, so the first Telegram
+      // message of the new day has no "(Reminder N)" suffix.
+      clearTaskNotificationState(task.id);
+      stopTelegramPolling(task.id);
     }
   });
 
