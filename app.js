@@ -403,9 +403,9 @@ function renderTasks() {
               ${soundOptionsHtml(task.sound)}
             </select>
           </label>
-          <button onclick="deleteTask('${task.id}')" class="deleteButton">Delete</button>
           <button onclick="editTask('${task.id}')" class="editButton">Edit</button>
           <button onclick="toggleDaysEditor('${task.id}')" class="editButton">Days</button>
+          <button onclick="deleteTask('${task.id}')" class="deleteButton">Delete</button>
         </div>
       </div>
       <div id="days-editor-${task.id}" class="day-editor" aria-label="Edit active days">
