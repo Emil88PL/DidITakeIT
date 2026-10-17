@@ -52,6 +52,10 @@
             <label><input type="checkbox" class="day-checkbox" value="6" checked>Sat</label>
             <label><input type="checkbox" class="day-checkbox" value="0" checked>Sun</label>
         </div>
+        <div class="sound-picker" aria-label="Ring sound for this task">
+            <span class="day-picker-label">Ring-sound:</span>
+            <select id="task-sound" class="dropdown"></select>
+        </div>
         <button type="submit" id="createTask" class="addButton">Add Task</button>
     </form>
 
@@ -88,28 +92,8 @@
         <button class="addButton custom-tooltip settings-button" data-tooltip="Volume ON">Sound ON</button>
         <button class="addButton custom-tooltip settings-button" data-tooltip="Link to download Task Buddy on bottom right (i)">Reset Task Buddy connection</button>
         <button class="addButton custom-tooltip settings-button" data-tooltip="Buddy Terminal">Reset Buddy Terminal connection</button>
-        <label for="ring-sound">Ring-sound:</label>
-        <select id="ring-sound" class="dropdown">
-            <option value="alarm">Half-Life</option>
-            <option value="SteamA">🕳Steam</option>
-            <option value="ye">😎</option>
-            <option value="ashley">ASHLEY</option>
-            <option value="bell">bell</option>
-            <option value="bell2">bell2</option>
-            <option value="bell3">bell3</option>
-            <option value="BigSub">Big Sub</option>
-            <option value="mint">Linux mint</option>
-            <option value="cat-meow">Cat</option>
-            <option value="gong">Gong</option>
-            <option value="notification">Notification</option>
-            <option value="Ohhnooo">Ohhnooo</option>
-            <option value="ring">Ring</option>
-            <option value="sub">Sub</option>
-            <option value="vibration">Vibration</option>
-            <option value="violin-sound">Violin-sound</option>
-            <option value="yeehaw">Yeehaw</option>
-            <option value="angklung">AngKlung</option>
-        </select>
+        <label for="ring-sound">Default ring-sound:</label>
+        <select id="ring-sound" class="dropdown"></select>
         <span id="play-sound" class="custom-tooltip" data-tooltip="Preview current sound">▶️</span>
         <div class="connection-wrapper">
             <div class="status-indicator" id="connectionStatus">
@@ -314,7 +298,7 @@
     </script>
 
     <!-- Alarm sound element -->
-    <audio id="alarm-sound" src="alarm.mp3" preload="auto"></audio>
+    <audio id="alarm-sound" src="sound/alarm.mp3" preload="auto"></audio>
 
     <!-- Floating Stars Container -->
     <div id="stars-container" class="stars-container"></div>

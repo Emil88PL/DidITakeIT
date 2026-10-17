@@ -179,6 +179,54 @@ const WEEK_DAYS = [
   { label: "Sun", value: 0 }
 ];
 
+// Single source of truth for the available ring sounds (files live in /sound).
+const RING_SOUNDS = [
+  { key: "alarm", label: "Half-Life" },
+  { key: "SteamA", label: "🕳Steam" },
+  { key: "ye", label: "😎" },
+  { key: "ashley", label: "ASHLEY" },
+  { key: "bell", label: "bell" },
+  { key: "bell2", label: "bell2" },
+  { key: "bell3", label: "bell3" },
+  { key: "BigSub", label: "Big Sub" },
+  { key: "mint", label: "Linux mint" },
+  { key: "cat-meow", label: "Cat" },
+  { key: "gong", label: "Gong" },
+  { key: "notification", label: "Notification" },
+  { key: "Ohhnooo", label: "Ohhnooo" },
+  { key: "ring", label: "Ring" },
+  { key: "sub", label: "Sub" },
+  { key: "vibration", label: "Vibration" },
+  { key: "violin-sound", label: "Violin-sound" },
+  { key: "yeehaw", label: "Yeehaw" },
+  { key: "angklung", label: "AngKlung" }
+];
+
+// The global default sound chosen in Settings (used when a task has no own sound).
+function defaultRingSound() {
+  return localStorage.getItem("ringSound") || "alarm";
+}
+
+// Resolve the sound a task should use, falling back to the global default.
+function resolveTaskSound(task) {
+  return (task && task.sound && task.sound !== "default") ? task.sound : defaultRingSound();
+}
+
+function soundLabel(key) {
+  const found = RING_SOUNDS.find(s => s.key === key);
+  return found ? found.label : key;
+}
+
+// Build <option> markup for a per-task sound select (includes the "default" choice).
+function soundOptionsHtml(selected) {
+  const isDefault = !selected || selected === "default";
+  let html = `<option value="default"${isDefault ? " selected" : ""}>Default (${soundLabel(defaultRingSound())})</option>`;
+  RING_SOUNDS.forEach(s => {
+    html += `<option value="${s.key}"${selected === s.key ? " selected" : ""}>${s.label}</option>`;
+  });
+  return html;
+}
+
 function isTaskActiveOnDay(task, dayIndex) {
   if (!Array.isArray(task.activeDays) || task.activeDays.length === 0) return true;
   return task.activeDays.includes(dayIndex);
@@ -350,6 +398,11 @@ function renderTasks() {
           </label>
         </div>
         <div>
+          <label class="task-sound-label" title="Ring-sound for this task">Ring:
+            <select class="task-sound-select" onchange="updateTaskSound('${task.id}', this.value)">
+              ${soundOptionsHtml(task.sound)}
+            </select>
+          </label>
           <button onclick="deleteTask('${task.id}')" class="deleteButton">Delete</button>
           <button onclick="editTask('${task.id}')" class="editButton">Edit</button>
           <button onclick="toggleDaysEditor('${task.id}')" class="editButton">Days</button>
@@ -393,6 +446,16 @@ function updateTaskDays(id, dayValue, checked) {
   saveTasks(tasks);
   renderTasks();
   checkOverdueTasks();
+}
+
+// Change the ring sound assigned to a single task ("default" = use Settings sound)
+function updateTaskSound(id, value) {
+  const tasks = getTasks();
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  task.sound = value || "default";
+  saveTasks(tasks);
+  renderTasks();
 }
 
 // Toggle a task'SeveranceGame checked state
@@ -679,7 +742,14 @@ function checkOverdueTasks() {
   }
 
   if (shouldPlayAlarm) {
-    playAlarmSound();
+    // Play the sound of the earliest-overdue task (falls back to the default).
+    let primaryTask = null;
+    overdueTasks.forEach(t => {
+      if (!primaryTask || new Date(t.dueTime) < new Date(primaryTask.dueTime)) {
+        primaryTask = t;
+      }
+    });
+    playAlarmSound(resolveTaskSound(primaryTask));
     if (!titleBlinkInterval) {
       const mode = loadPageTitleMode();
       if (mode === 'marquee') {
@@ -815,6 +885,7 @@ document.getElementById('preset-select').addEventListener('change', function(e) 
         alarmTriggered: false,
         isPreset: true,
         presetType: newPreset,
+        sound: "default",
         activeDays: [0, 1, 2, 3, 4, 5, 6]
       });
     });
@@ -829,6 +900,7 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
   e.preventDefault();
   const name = document.getElementById('task-name').value;
   const timeInput = document.getElementById('due-time').value;
+  const sound = document.getElementById('task-sound').value || 'default';
   const selectedDays = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(cb => Number(cb.value));
   if (selectedDays.length === 0) {
     alert("Select at least one active day.");
@@ -845,6 +917,7 @@ document.getElementById('task-form').addEventListener('submit', function(e) {
     checked: false,
     alarmTriggered: false,
     isPreset: false,
+    sound: sound,
     activeDays: selectedDays
   };
 
@@ -1556,15 +1629,22 @@ function updateSoundButton() {
   }
 }
 
-// Override alarm play with mute check
-function playAlarmSound() {
+// Override alarm play with mute check.
+// soundKey is a RING_SOUNDS key; when omitted the settings default is used.
+function playAlarmSound(soundKey) {
   if (isMuted) return;
   const alarmSound = document.getElementById('alarm-sound');
-  if (alarmSound) {
-    alarmSound.pause();
-    alarmSound.currentTime = 0;
-    alarmSound.play().catch(err => console.warn("Alarm playback prevented:", err));
+  if (!alarmSound) return;
+
+  const wantedSrc = "sound/" + (soundKey || defaultRingSound()) + ".mp3";
+  // Only reload when the source actually changes (avoids a restart glitch).
+  if (!alarmSound.src.endsWith(wantedSrc)) {
+    alarmSound.src = wantedSrc;
+    alarmSound.load();
   }
+  alarmSound.pause();
+  alarmSound.currentTime = 0;
+  alarmSound.play().catch(err => console.warn("Alarm playback prevented:", err));
 }
 
 // --- Reset Task Buddy button ---
@@ -1597,22 +1677,52 @@ resetButtonTerminal.addEventListener('click', () => {
 // --- Ring sound selection ---
 const ringSoundSelect = document.getElementById("ring-sound");
 
-// Load saved ring sound from localStorage
-const savedRingSound = localStorage.getItem("ringSound");
-if (savedRingSound) {
-  ringSoundSelect.value = savedRingSound;
-  updateAlarmSource(savedRingSound);
+// Populate the settings dropdown from the shared catalog (no "default" entry here).
+if (ringSoundSelect) {
+  RING_SOUNDS.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.key;
+    opt.textContent = s.label;
+    ringSoundSelect.appendChild(opt);
+  });
+
+  // Load saved default ring sound from localStorage
+  const savedRingSound = localStorage.getItem("ringSound");
+  if (savedRingSound && RING_SOUNDS.some(s => s.key === savedRingSound)) {
+    ringSoundSelect.value = savedRingSound;
+    updateAlarmSource(savedRingSound);
+  }
+}
+
+// Populate the per-task sound picker in the "Add task" form (with a Default entry).
+const taskSoundSelect = document.getElementById("task-sound");
+if (taskSoundSelect) {
+  const defOpt = document.createElement("option");
+  defOpt.value = "default";
+  defOpt.textContent = `Default (${soundLabel(defaultRingSound())})`;
+  taskSoundSelect.appendChild(defOpt);
+  RING_SOUNDS.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.key;
+    opt.textContent = s.label;
+    taskSoundSelect.appendChild(opt);
+  });
 }
 
 ringSoundSelect.addEventListener("change", () => {
   const selected = ringSoundSelect.value;
   localStorage.setItem("ringSound", selected);
   updateAlarmSource(selected);
+
+  // Keep the "Default (...)" labels in sync with the new default sound.
+  const defOpt = taskSoundSelect && taskSoundSelect.querySelector('option[value="default"]');
+  if (defOpt) defOpt.textContent = `Default (${soundLabel(selected)})`;
+  renderTasks();
 });
 
 function updateAlarmSource(type) {
   if (!alarmElement) return;
-  alarmElement.src = type + ".mp3";
+  alarmElement.src = "sound/" + type + ".mp3";
 }
 
 // --- Volume Control ---
@@ -1642,12 +1752,16 @@ volumeControl.addEventListener("input", () => {
 const playSoundButton = document.getElementById("play-sound");
 
 playSoundButton.addEventListener("click", () => {
-  if (!isMuted && alarmElement) {
+  if (isMuted) {
+    console.log("Sound is muted, cannot preview.");
+    return;
+  }
+  if (alarmElement) {
+    // Preview always uses the global default sound from Settings.
+    updateAlarmSource(defaultRingSound());
     alarmElement.pause();
     alarmElement.currentTime = 0;
     alarmElement.play().catch(err => console.warn("Playback prevented:", err));
-  } else if (isMuted) {
-    console.log("Sound is muted, cannot preview.");
   }
 });
 

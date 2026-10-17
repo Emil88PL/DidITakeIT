@@ -365,6 +365,40 @@ form#task-form input, #check-frequency {
     margin-top: 2px;
 }
 
+.sound-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+    font-size: 0.9rem;
+}
+
+.sound-picker select,
+.task-sound-select {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: none;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    max-width: 100%;
+}
+
+.task-sound-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 8px;
+    font-size: 0.8rem;
+    opacity: 0.9;
+    white-space: nowrap;
+}
+
+.task-sound-select {
+    padding: 6px 8px;
+    max-width: 120px;
+}
+
 .inactive-task {
     opacity: 0.5;
 }
