@@ -1,3 +1,7 @@
+html {
+    background: linear-gradient(135deg, #1e3c72, #373636);
+}
+
 body {
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #1e3c72, #373636);
@@ -9,6 +13,17 @@ body {
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
+}
+
+/* Force a slightly smaller (80%) scale on desktop so everything feels
+   a bit more compact - like the browser zoomed out to 80%. */
+@media screen and (min-width: 401px) {
+    html {
+        zoom: 0.8;
+    }
+    body {
+        min-height: 125vh;
+    }
 }
 
 /* Score Display */
